@@ -1,0 +1,10 @@
+name: Task
+description: Chore, CI, docs
+labels: [task]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What + acceptance criteria
+    validations:
+      required: true

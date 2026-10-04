@@ -1,0 +1,26 @@
+name: Feature request
+description: New dashboard capability
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem (which role: business / developer / admin?)
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal (route, contract endpoint, states)
+    validations:
+      required: true
+  - type: input
+    id: backend
+    attributes:
+      label: Backend dependency (issue/PR or N/A)
+  - type: checkboxes
+    id: rfc
+    attributes:
+      label: Cross-cutting?
+      options:
+        - label: Needs RFC/ADR (contract, auth, upload, new role/route)

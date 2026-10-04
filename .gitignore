@@ -1,0 +1,21 @@
+# Deps
+node_modules/
+.next/
+out/
+dist/
+
+# Env — NEVER commit real values
+.env
+.env.local
+.env*.local
+
+# Logs / OS / editors
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+
+# Playwright
+test-results/
+playwright-report/

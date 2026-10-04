@@ -1,0 +1,23 @@
+name: Bug report
+description: Something broken in the dashboards
+labels: [bug]
+body:
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro steps
+      placeholder: "1. Go to /business/campaigns ...\n2. Expected ...\n3. Got ..."
+    validations:
+      required: true
+  - type: textarea
+    id: shots
+    attributes:
+      label: Screenshots / console errors
+  - type: input
+    id: route
+    attributes:
+      label: Route + role (e.g. /admin/reviews as admin)
+  - type: input
+    id: backend
+    attributes:
+      label: Backend tag/env verified against

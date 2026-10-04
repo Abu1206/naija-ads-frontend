@@ -1,0 +1,25 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # No code yet (docs-only init): guards no-op until package.json lands in Phase 1.
+      - name: Typecheck (when scaffolded)
+        run: |
+          if [ -f package.json ]; then npm ci && npm run typecheck; else echo "no frontend code yet — skipping"; fi
+      - name: Lint (when scaffolded)
+        run: |
+          if [ -f package.json ]; then npm run lint; else echo "no frontend code yet — skipping"; fi
+      - name: Tests (when scaffolded)
+        run: |
+          if [ -f package.json ]; then npm run test; else echo "no frontend code yet — skipping"; fi

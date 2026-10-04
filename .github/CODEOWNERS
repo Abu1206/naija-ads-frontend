@@ -1,0 +1,23 @@
+# CODEOWNERS — naija-ads-frontend
+# Replace @org/team placeholders with real handles once the team is set.
+
+*                               @Abu1206
+
+/AGENTS.md                      @Abu1206
+/docs/adr/                      @Abu1206
+
+# Contract + auth — 2 reviews required
+/lib/api.ts                     @Abu1206
+/lib/auth.ts                    @Abu1206
+/lib/types.ts                   @Abu1206
+/app/\(auth\)/                  @Abu1206
+
+# Money-sensitive UI
+/app/\(business\)/business/billing/  @Abu1206
+/app/\(developer\)/developer/earnings/ @Abu1206
+/app/\(developer\)/developer/payouts/ @Abu1206
+
+# Trust
+/app/\(admin\)/                 @Abu1206
+
+/.github/workflows/             @Abu1206
