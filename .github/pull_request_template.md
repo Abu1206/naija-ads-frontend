@@ -15,9 +15,9 @@ Closes # (required, except tiny `docs:` fixes)
 ## Test evidence (required)
 
 ```text
-npm run typecheck
-npm run lint
-npm run test
+pnpm typecheck
+pnpm lint
+pnpm test
 ```
 
 - [ ] Unit tests added (`*.test.ts(x)`) / e2e touched for flows, guards, billing, uploads

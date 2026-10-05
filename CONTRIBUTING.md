@@ -43,7 +43,7 @@ Labels: `phase-1…phase-7`, `auth`, `billing`, `upload`, `a11y`, `needs-rfc`, `
 
 ## 6. Tests
 
-Colocated `*.test.ts(x)` (Vitest) + `e2e/` (Playwright). Bug fix = failing-first regression test. `npm run typecheck` clean is merge-blocking.
+Colocated `*.test.ts(x)` (Vitest) + `e2e/` (Playwright). Bug fix = failing-first regression test. `pnpm typecheck` clean is merge-blocking.
 
 ## 7. Releases
 

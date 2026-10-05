@@ -8,7 +8,7 @@ Product spec lives in the backend repo: `Naija_Ads_MVP_Product_and_Technical_Spe
 
 ## Stack
 
-Next.js 14 App Router + TypeScript strict + Tailwind. Vitest + Playwright. Backend API via typed `lib/api.ts`.
+Next.js 16 App Router + TypeScript strict + Tailwind v4. Vitest + Playwright. Backend API via typed `lib/api.ts`.
 
 ```
 app/(business)  → campaigns, creatives, billing (Bachs funding)
@@ -20,16 +20,15 @@ Backend contract: `NEXT_PUBLIC_API_BASE_URL` + `/api/v1/...` (see `AGENTS.md §4
 
 ## Status
 
-🚧 **Docs + instructions only (pre-Phase 1).** No code scaffolded yet on purpose.
-Scaffold `app/`, `components/`, `lib/`, `e2e/` exactly as `AGENTS.md §3` when Phase 1 starts.
+🏗️ **Scaffolded on Next.js 16.3.8 (see `docs/adr/0002-next-16-upgrade.md`).** Shells only — pages render empty/loading/error states, no backend wiring yet. No feature work until instructed.
 
 ## Quickstart (once scaffolded)
 
 ```bash
 cp .env.example .env.local
-npm install
-npm run dev
-npm run typecheck && npm run lint && npm run test
+pnpm install
+pnpm dev
+pnpm typecheck && pnpm lint && pnpm test
 ```
 
 ## Contributing

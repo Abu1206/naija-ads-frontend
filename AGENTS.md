@@ -15,14 +15,14 @@ This repo renders UI + talks to the backend API. It NEVER decides money, auction
 
 ## 2. Tech stack (do not change without RFC)
 
-- **Next.js 14 App Router + TypeScript strict** (`strict: true`, no `any` without justification).
-- **Tailwind CSS** for styling. No new UI kit without RFC (shadcn acceptable if team agrees — record ADR).
+- **Next.js 16 App Router + TypeScript strict** (`strict: true`, no `any` without justification). React 19. Node >= 22. See ADR 0002 (upgraded from Next.js 14, which is EOL).
+- **Tailwind CSS v4** for styling (CSS-first `@import "tailwindcss"`, PostCSS via `@tailwindcss/postcss`). No new UI kit without RFC (shadcn acceptable if team agrees — record ADR).
 - Data: `fetch` via a typed `lib/api.ts` client; server components for reads, client components only for forms/interactive widgets.
 - Auth: backend-issued session/JWT in **httpOnly cookie** (never localStorage for tokens). Role-based route guards: `/business/*`, `/developer/*`, `/admin/*`.
 - Forms: controlled + schema validation (zod recommended). Uploads: file type/size/dimension pre-check client-side, real validation server-side.
 - Tests: **Vitest** (unit) + **Playwright** (critical flows). Lint: ESLint + Prettier.
 
-## 3. Project structure to scaffold (when Phase 1 starts)
+## 3. Project structure (scaffolded on Next.js 16 — shells only, no feature work yet)
 
 ```
 naija-ads-frontend/
@@ -104,13 +104,13 @@ Rules:
 | Routes | role guard redirects (unauth → login, wrong role → 403) |
 | e2e (Playwright) | login → create campaign → upload creative → fund (mocked checkout) → admin approve appears |
 
-Conventions: colocated `*.test.ts(x)` with Vitest; e2e in `e2e/`. CI runs `tsc --noEmit`, `eslint`, `vitest run`, `playwright` (smoke on staging). Bug fixes ship a failing-first regression test.
+Conventions: colocated `*.test.ts(x)` with Vitest; e2e in `e2e/`. Package manager is **pnpm** (`packageManager` pinned in `package.json`). CI runs `tsc --noEmit`, `eslint`, `vitest run`, `playwright` (smoke on staging). Bug fixes ship a failing-first regression test.
 
 ```bash
-npm run typecheck   # tsc --noEmit (must pass)
-npm run lint        # eslint (must pass)
-npm run test        # vitest run (must pass)
-npm run test:e2e    # playwright (critical flows)
+pnpm typecheck   # tsc --noEmit (must pass)
+pnpm lint        # eslint (must pass)
+pnpm test        # vitest run (must pass)
+pnpm test:e2e    # playwright (critical flows)
 ```
 
 ## 8. Config / env

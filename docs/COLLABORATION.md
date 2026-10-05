@@ -31,7 +31,7 @@ RFC (`needs-rfc` issue) before code for: new routes/roles, contract changes, aut
 
 ## 5. Environments
 
-- Local: `npm run dev` against local backend (`NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`).
+- Local: `pnpm dev` against local backend (`NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`).
 - Preview per PR (screenshots in PR). Staging tracks backend staging (Bachs sandbox). Prod env set in host, never in git.
 - Leak protocol: rotate, revoke, purge history, post-mortem issue. Tokens stay httpOnly; `NEXT_PUBLIC_*` is public — no secrets there, ever.
 

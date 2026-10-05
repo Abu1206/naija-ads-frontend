@@ -4,6 +4,10 @@ node_modules/
 out/
 dist/
 
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
 # Env — NEVER commit real values
 .env
 .env.local
