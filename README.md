@@ -16,7 +16,7 @@ app/(developer) → apps, placements, earnings, payouts
 app/(admin)     → reviews, payments, fraud, audit
 ```
 
-Backend contract: `NEXT_PUBLIC_API_BASE_URL` + `/api/v1/...` (see `AGENTS.md §4`).
+Backend contract: `NEXT_PUBLIC_API_BASE_URL` + `/api/v1/...` (see `AGENTS.md §4`). Sign in uses Google Identity Services and the backend's HttpOnly session cookie.
 
 ## Status
 

@@ -18,7 +18,7 @@ This repo renders UI + talks to the backend API. It NEVER decides money, auction
 - **Next.js 14 App Router + TypeScript strict** (`strict: true`, no `any` without justification).
 - **Tailwind CSS** for styling. No new UI kit without RFC (shadcn acceptable if team agrees — record ADR).
 - Data: `fetch` via a typed `lib/api.ts` client; server components for reads, client components only for forms/interactive widgets.
-- Auth: backend-issued session/JWT in **httpOnly cookie** (never localStorage for tokens). Role-based route guards: `/business/*`, `/developer/*`, `/admin/*`.
+- Auth: Google Identity Services returns an ID token; send it to the backend for verification. The backend-issued session is an **httpOnly cookie** (never localStorage for tokens). Role-based route guards: `/business/*`, `/developer/*`, `/admin/*`.
 - Forms: controlled + schema validation (zod recommended). Uploads: file type/size/dimension pre-check client-side, real validation server-side.
 - Tests: **Vitest** (unit) + **Playwright** (critical flows). Lint: ESLint + Prettier.
 
@@ -62,7 +62,9 @@ Route groups `(business)` etc. keep URLs clean (`/business/campaigns`) while sha
 Base URL from env `NEXT_PUBLIC_API_BASE_URL` (e.g. `http://localhost:8080`). All paths versioned:
 
 ```
-POST /api/v1/auth/login, /api/v1/developers, /api/v1/businesses
+POST /api/v1/auth/google (Google ID token + first-login account type), /api/v1/auth/logout
+GET /api/v1/auth/me
+POST /api/v1/developers, /api/v1/businesses
 GET/POST /api/v1/apps, /api/v1/placements
 GET/POST /api/v1/campaigns, /api/v1/creatives
 POST /api/v1/payments (create Bachs checkout) — webhook handled server-side only
