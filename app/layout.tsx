@@ -16,14 +16,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-bold">
               Naija Ads
             </Link>
-            <Link href="/business/campaigns" className="text-sm text-gray-600 hover:text-gray-900">
-              Business
+            <Link href="/advertisers" className="text-sm text-gray-600 hover:text-gray-900">
+              Advertisers
             </Link>
-            <Link href="/developer/apps" className="text-sm text-gray-600 hover:text-gray-900">
-              Developer
+            <Link href="/developers" className="text-sm text-gray-600 hover:text-gray-900">
+              Developers
             </Link>
-            <Link href="/admin/reviews" className="text-sm text-gray-600 hover:text-gray-900">
-              Admin
+            <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">
+              Pricing
+            </Link>
+            <Link href="/docs" className="text-sm text-gray-600 hover:text-gray-900">
+              Docs
             </Link>
           </nav>
         </header>

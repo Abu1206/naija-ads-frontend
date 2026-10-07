@@ -22,25 +22,41 @@ This repo renders UI + talks to the backend API. It NEVER decides money, auction
 - Forms: controlled + schema validation (zod recommended). Uploads: file type/size/dimension pre-check client-side, real validation server-side.
 - Tests: **Vitest** (unit) + **Playwright** (critical flows). Lint: ESLint + Prettier.
 
-## 3. Project structure (scaffolded on Next.js 16 — shells only, no feature work yet)
+## 3. Project structure (Next.js 16 App Router)
 
 ```
 naija-ads-frontend/
 ├── app/
-│   ├── layout.tsx               # root layout, nav shell
-│   ├── page.tsx                 # landing / role router
-│   ├── (auth)/login/page.tsx    # login, signup entry
-│   ├── (business)/business/
-│   │   ├── campaigns/page.tsx   # list + status
-│   │   ├── campaigns/new/page.tsx
+│   ├── layout.tsx               # root layout, public nav
+│   ├── page.tsx                 # landing + role router
+│   ├── 403/page.tsx             # wrong-role landing (lib/auth.ts redirects here)
+│   ├── not-found.tsx, sitemap.ts, robots.ts
+│   ├── (marketing)/layout.tsx   # product nav + legal footer
+│   │   ├── advertisers/page.tsx # public demand-side page (/advertisers)
+│   │   ├── developers/page.tsx  # public supply-side page (/developers)
+│   │   ├── pricing/page.tsx     # CPM model + format floor tiers
+│   │   ├── docs/                # developer docs: overview, getting-started,
+│   │   │                        #   web-sdk, formats, test-mode
+│   │   ├── tutorials/           # first-campaign, first-placement
+│   │   ├── privacy/page.tsx     # NDPR minimization + publisher duties
+│   │   └── terms/page.tsx       # marketplace terms
+│   ├── (auth)/login/page.tsx    # login entry (Google wiring lands with auth build)
+│   ├── (auth)/signup/page.tsx   # role picker → Continue with Google
+│   ├── (business)/layout.tsx + /business/
+│   │   ├── campaigns/page.tsx + campaigns/new/page.tsx
 │   │   ├── creatives/page.tsx   # upload (R2 via backend presigned URL)
-│   │   └── billing/page.tsx     # fund via Bachs checkout, ledger view
-│   ├── (developer)/developer/
+│   │   ├── analytics/page.tsx   # impressions/clicks/CTR/spend breakdowns
+│   │   ├── billing/page.tsx     # fund via Bachs checkout, ledger view
+│   │   └── onboarding/page.tsx  # business profile + verification submit
+│   ├── (developer)/layout.tsx + /developer/
 │   │   ├── apps/page.tsx        # register app → APP_ID + SDK creds display
-│   │   ├── placements/page.tsx  # per-app banner/interstitial/rewarded placements
+│   │   ├── placements/page.tsx  # per-app banner/interstitial/rewarded/audio
+│   │   ├── analytics/page.tsx   # per-app fill rate, eCPM, revenue split
 │   │   ├── earnings/page.tsx
-│   │   └── payouts/page.tsx
-│   └── (admin)/admin/
+│   │   ├── payouts/page.tsx
+│   │   └── onboarding/page.tsx  # developer profile + verification submit
+│   └── (admin)/layout.tsx + /admin/
+│       ├── page.tsx             # network overview + queue entry points
 │       ├── reviews/page.tsx     # business/dev/app/campaign/creative queues
 │       ├── payments/page.tsx
 │       ├── fraud/page.tsx
@@ -55,7 +71,9 @@ naija-ads-frontend/
 └── docs/adr/
 ```
 
-Route groups `(business)` etc. keep URLs clean (`/business/campaigns`) while sharing layouts.
+Route groups `(marketing)` etc. keep URLs clean (`/business/campaigns`) while sharing layouts.
+Public marketing + docs + tutorials are content pages (no auth); every dashboard page keeps its
+role guard. Structural shells only — backend wiring lands per the roadmap hooks in §10.
 
 ## 4. Backend contract (mirror — never redefine)
 

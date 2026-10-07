@@ -20,7 +20,10 @@ Backend contract: `NEXT_PUBLIC_API_BASE_URL` + `/api/v1/...` (see `AGENTS.md §4
 
 ## Status
 
-🏗️ **Scaffolded on Next.js 16.3.8 (see `docs/adr/0002-next-16-upgrade.md`).** Shells only — pages render empty/loading/error states, no backend wiring yet. No feature work until instructed.
+🏗️ **Route structure in place (see `AGENTS.md §3`).** Public marketing (`/advertisers`, `/developers`,
+`/pricing`), developer docs (`/docs/*`), tutorials (`/tutorials/*`), legal (`/privacy`, `/terms`),
+auth entry (`/login`, `/signup`), all three dashboards with onboarding + analytics shells, and an
+admin overview. Backend wiring lands per the roadmap — no feature work until instructed.
 
 ## Quickstart (once scaffolded)
 
