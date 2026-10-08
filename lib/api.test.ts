@@ -31,6 +31,15 @@ describe("apiFetch", () => {
     vi.unstubAllGlobals();
   });
 
+  it("maps an unreachable API to a readable error, not the browser's wording", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    const err = await apiFetch("/api/v1/auth/login").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(0);
+    expect((err as ApiError).message).toContain("NEXT_PUBLIC_API_BASE_URL");
+    vi.unstubAllGlobals();
+  });
+
   it("sends cookies for httpOnly session auth", async () => {
     const fetchMock = vi
       .fn()

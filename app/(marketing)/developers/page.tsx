@@ -26,7 +26,7 @@ export default function DevelopersMarketingPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/signup?role=developer"
-            className="rounded bg-black px-4 py-2 text-sm font-medium text-white"
+            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong"
           >
             Start earning
           </Link>

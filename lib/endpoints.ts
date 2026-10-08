@@ -5,6 +5,7 @@
 // and replace across pages.
 
 export const endpoints = {
+  authLogin: "/api/v1/auth/login",
   campaigns: "/api/v1/campaigns",
   creatives: "/api/v1/creatives",
   businesses: "/api/v1/businesses",

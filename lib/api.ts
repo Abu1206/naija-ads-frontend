@@ -6,6 +6,9 @@ import { ApiError, type FieldErrors } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
+const UNREACHABLE_MESSAGE =
+  "Could not reach the Naija Ads API. Check NEXT_PUBLIC_API_BASE_URL.";
+
 export function apiUrl(path: string): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
   return `${API_BASE.replace(/\/$/, "")}${clean}`;
@@ -24,16 +27,23 @@ function isFieldErrors(value: unknown): value is FieldErrors {
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options;
-  const res = await fetch(apiUrl(path), {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    // Session/JWT lives in an httpOnly cookie — never localStorage.
-    credentials: "include",
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl(path), {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      // Session/JWT lives in an httpOnly cookie — never localStorage.
+      credentials: "include",
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    // fetch rejects only when the request never reached the Go server, and the
+    // browser's own wording ("Failed to fetch") tells a user nothing to act on.
+    throw new ApiError(0, UNREACHABLE_MESSAGE);
+  }
 
   if (res.status === 401) {
     throw new ApiError(401, "Unauthorized — please log in again.");
@@ -74,9 +84,7 @@ export async function load<T>(
     return { data: await apiFetch<T>(path, options), error: null };
   } catch (err) {
     const message =
-      err instanceof ApiError
-        ? err.message
-        : "Could not reach the Naija Ads API. Check NEXT_PUBLIC_API_BASE_URL.";
+      err instanceof ApiError ? err.message : UNREACHABLE_MESSAGE;
     return { data: null, error: message };
   }
 }

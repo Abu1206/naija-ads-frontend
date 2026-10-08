@@ -3,11 +3,11 @@ import Link from "next/link";
 /** Auth shell: centered card for login/signup. Session is set by the backend. */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-md space-y-6 px-4 py-12">
-      <Link href="/" className="inline-block text-lg font-semibold tracking-tight">
-        naija ads
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-4 py-12">
+      <Link href="/" className="text-xl font-semibold tracking-tight">
+        naija<span className="text-brand">ads</span>
       </Link>
-      {children}
+      <div className="w-full max-w-md rounded-xl border bg-white p-6">{children}</div>
     </div>
   );
 }

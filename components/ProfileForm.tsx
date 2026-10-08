@@ -8,7 +8,7 @@ import type { ApiError } from "@/lib/types";
 export interface ProfileField {
   name: string;
   label: string;
-  type?: "text" | "textarea" | "email" | "tel" | "url" | "select";
+  type?: "text" | "textarea" | "email" | "tel" | "url" | "password" | "select";
   options?: { value: string; label: string }[];
   required?: boolean;
   placeholder?: string;
@@ -23,10 +23,17 @@ interface ProfileFormProps {
 }
 
 /**
- * Profile + verification submit, shared by business and developer onboarding.
- * The backend owns the verification decision; this only reports the outcome.
+ * Profile + verification submit: shared by business and developer onboarding, app
+ * and placement creation, the payout account, and both signup variants. The
+ * backend owns the verification decision; this only reports the outcome.
  */
-export function ProfileForm({ endpoint, fields, submitLabel, successNote, initial = {} }: ProfileFormProps) {
+export function ProfileForm({
+  endpoint,
+  fields,
+  submitLabel,
+  successNote,
+  initial = {},
+}: ProfileFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(initial);
   const [errors, setErrors] = useState<string[]>([]);

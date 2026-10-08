@@ -31,7 +31,7 @@ export default async function Home() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/advertisers"
-            className="rounded bg-black px-5 py-2.5 text-sm font-medium text-white"
+            className="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
           >
             Advertise
           </Link>

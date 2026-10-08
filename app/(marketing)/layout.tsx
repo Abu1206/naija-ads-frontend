@@ -21,7 +21,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         <span className="flex-1" />
         <Link
           href="/login"
-          className="rounded bg-black px-4 py-2 text-sm font-medium text-white"
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong"
         >
           Log in
         </Link>
