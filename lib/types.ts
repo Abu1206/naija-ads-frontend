@@ -3,7 +3,7 @@
 
 export type Role = "business" | "developer" | "admin";
 
-export type AdType = "banner" | "interstitial" | "rewarded";
+export type AdType = "banner" | "interstitial" | "rewarded" | "audio";
 
 export interface Campaign {
   id: string;
