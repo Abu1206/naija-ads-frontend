@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* Brand green is restricted to buttons, icons and chart series. Surfaces stay
+   white/gray so the accent keeps its meaning as "actionable". */
+@theme {
+  --color-brand: #38b000;
+  --color-brand-strong: #2e9100;
+}

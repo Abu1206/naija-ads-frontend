@@ -61,3 +61,22 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 }
 
 export { API_BASE };
+
+/**
+ * Server-component read that never throws: dashboards must render their error
+ * state instead of a stack when the API is down or rejects the session.
+ */
+export async function load<T>(
+  path: string,
+  options: ApiOptions = {},
+): Promise<{ data: T | null; error: string | null }> {
+  try {
+    return { data: await apiFetch<T>(path, options), error: null };
+  } catch (err) {
+    const message =
+      err instanceof ApiError
+        ? err.message
+        : "Could not reach the Naija Ads API. Check NEXT_PUBLIC_API_BASE_URL.";
+    return { data: null, error: message };
+  }
+}

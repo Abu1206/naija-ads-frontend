@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { apiFetch, apiUrl } from "./api";
+import { apiFetch, apiUrl, load } from "./api";
 import { ApiError } from "./types";
 
 describe("apiUrl", () => {
@@ -41,6 +41,36 @@ describe("apiFetch", () => {
       expect.any(String),
       expect.objectContaining({ credentials: "include" }),
     );
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("load", () => {
+  it("returns data and no error on a good response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify([{ id: "c1" }]), { status: 200 })),
+    );
+    await expect(load("/api/v1/campaigns")).resolves.toEqual({
+      data: [{ id: "c1" }],
+      error: null,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("never throws: an API failure becomes an error string", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Forbidden", { status: 403 })));
+    const result = await load("/api/v1/campaigns");
+    expect(result.data).toBeNull();
+    expect(result.error).toBe("Forbidden");
+    vi.unstubAllGlobals();
+  });
+
+  it("names the env var when the API is unreachable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+    const result = await load("/api/v1/campaigns");
+    expect(result.data).toBeNull();
+    expect(result.error).toContain("NEXT_PUBLIC_API_BASE_URL");
     vi.unstubAllGlobals();
   });
 });

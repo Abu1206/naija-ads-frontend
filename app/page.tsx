@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 };
 
 const ROLE_HOME = {
-  business: "/business/campaigns",
-  developer: "/developer/apps",
+  business: "/business",
+  developer: "/developer",
   admin: "/admin",
 } as const;
 

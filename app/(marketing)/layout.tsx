@@ -11,7 +11,7 @@ const PRODUCT_LINKS = [
 /** Public marketing shell: product pages, docs, tutorials, legal. No auth. */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="space-y-12">
+    <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-10 sm:px-6">
       <nav aria-label="Product" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         {PRODUCT_LINKS.map((l) => (
           <Link key={l.href} href={l.href} className="text-gray-600 hover:text-gray-900">

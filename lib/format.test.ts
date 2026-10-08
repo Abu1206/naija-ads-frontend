@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatCTR, formatDate, formatECPM, formatFillRate, formatKobo } from "./format";
+import {
+  formatCTR,
+  formatCount,
+  formatDate,
+  formatECPM,
+  formatFillRate,
+  formatKobo,
+  nairaInputToKobo,
+} from "./format";
 
 describe("formatKobo", () => {
   it("formats kobo ints as naira", () => {
@@ -45,5 +53,25 @@ describe("formatFillRate", () => {
 describe("formatDate", () => {
   it("returns em-dash for invalid input", () => {
     expect(formatDate("not-a-date")).toBe("—");
+  });
+});
+
+describe("formatCount", () => {
+  it("groups thousands", () => {
+    expect(formatCount(1284)).toBe("1,284");
+  });
+
+  it("formats zero as a real number, not a gap", () => {
+    expect(formatCount(0)).toBe("0");
+  });
+});
+
+describe("nairaInputToKobo", () => {
+  it("converts a typed naira amount to kobo", () => {
+    expect(nairaInputToKobo(1000)).toBe(100000);
+  });
+
+  it("rounds to whole kobo instead of sending a float", () => {
+    expect(nairaInputToKobo(10.005)).toBe(1001);
   });
 });

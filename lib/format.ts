@@ -42,3 +42,17 @@ export function formatDate(iso: string): string {
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-NG", { year: "numeric", month: "short", day: "numeric" });
 }
+
+/** 1284 -> "1,284". Backend counts only; never used to derive a count. */
+export function formatCount(value: number): string {
+  return new Intl.NumberFormat("en-NG").format(value);
+}
+
+/**
+ * Form-input unit conversion only: an advertiser types naira, the API takes kobo.
+ * This never derives spend, revenue or a balance — those arrive kobo-denominated
+ * from the backend and are displayed, not computed (AGENTS.md §6.1).
+ */
+export function nairaInputToKobo(naira: number): number {
+  return Math.round(naira * 100);
+}

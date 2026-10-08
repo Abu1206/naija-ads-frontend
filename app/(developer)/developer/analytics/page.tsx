@@ -1,24 +1,128 @@
-import { requireRole } from "@/lib/auth";
+import { PageHeader } from "@/components/DashboardShell";
+import { BarChart, type SeriesPoint } from "@/components/BarChart";
+import { DataTable } from "@/components/DataTable";
 import { MetricCard } from "@/components/MetricCard";
-import { formatECPM, formatFillRate } from "@/lib/format";
+import { load } from "@/lib/api";
+import { requireRole } from "@/lib/auth";
+import { analyticsFor, endpoints } from "@/lib/endpoints";
+import { formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
+import type { AnalyticsSummary, App, DeveloperEarning } from "@/lib/types";
 
-// Developer analytics: per-app impressions, fill rate, revenue split by format —
-// all backend-computed (GET /api/v1/analytics?scope=developer).
+/**
+ * Developer analytics (spec §22): impressions, fill rate, estimated revenue and
+ * the banner/interstitial/rewarded split — all backend-computed and displayed only.
+ */
 export default async function DeveloperAnalyticsPage() {
   await requireRole("developer");
+  const [analytics, apps, earnings] = await Promise.all([
+    load<AnalyticsSummary>(analyticsFor("developer")),
+    load<App[]>(endpoints.apps),
+    load<DeveloperEarning[]>(endpoints.earnings),
+  ]);
+
+  const summary = analytics.data;
+  const formats = summary?.by_format ?? {};
+  const appNames = new Map((apps.data ?? []).map((a) => [a.app_id, a.name]));
+  const series: SeriesPoint[] =
+    summary?.series.map((point) => ({
+      label: point.period.slice(0, 7),
+      primary: point.impressions,
+      secondary: point.clicks,
+    })) ?? [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Analytics</h1>
-      <div className="grid gap-4 sm:grid-cols-4">
-        <MetricCard label="Impressions" value="—" />
-        <MetricCard label="Fill rate" value={formatFillRate(0, 0)} />
-        <MetricCard label="eCPM" value={formatECPM(0, 0)} />
-        <MetricCard label="Est. revenue" value="—" />
+      <PageHeader
+        title="Analytics"
+        subtitle="Delivery and revenue across every app you monetize."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Impressions"
+          value={summary ? formatCount(summary.impressions) : "—"}
+          icon="analytics"
+          error={analytics.error}
+        />
+        <MetricCard
+          label="Ad requests"
+          value={summary ? formatCount(summary.ad_requests) : "—"}
+          icon="placements"
+          error={analytics.error}
+        />
+        <MetricCard
+          label="Fill rate"
+          value={summary ? formatFillRate(summary.filled, summary.ad_requests) : "—"}
+          icon="overview"
+          error={analytics.error}
+        />
+        <MetricCard
+          label="eCPM"
+          value={summary ? formatECPM(summary.revenue_kobo, summary.impressions) : "—"}
+          icon="earnings"
+          error={analytics.error}
+        />
       </div>
-      <p className="text-sm text-gray-600">
-        Per-app and per-format breakdowns land with the analytics wiring.
-      </p>
+
+      <section className="rounded-xl border bg-white p-5">
+        <h2 className="mb-4 font-semibold">Delivery</h2>
+        {analytics.error ? (
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+            {analytics.error}
+          </p>
+        ) : series.length === 0 ? (
+          <p className="rounded-lg border p-6 text-center text-gray-500">
+            No delivery yet. Fill data appears once the SDK serves its first ad.
+          </p>
+        ) : (
+          <BarChart
+            data={series}
+            primaryLabel="Impressions"
+            secondaryLabel="Clicks"
+            ariaLabel="Impressions and clicks by period"
+          />
+        )}
+      </section>
+
+      <section className="rounded-xl border bg-white p-5">
+        <h2 className="mb-4 font-semibold">Revenue by format</h2>
+        <dl className="grid gap-4 sm:grid-cols-3">
+          {(["banner", "interstitial", "rewarded"] as const).map((format) => (
+            <div key={format} className="rounded-lg border p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500 capitalize">
+                {format}
+              </dt>
+              <dd className="mt-1 text-xl font-semibold">
+                {formats[format] ? formatKobo(formats[format]!.revenue_kobo) : "—"}
+              </dd>
+              <dd className="text-xs text-gray-500">
+                {formats[format]
+                  ? `${formatCount(formats[format]!.impressions)} impressions`
+                  : "No data"}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <DataTable<DeveloperEarning>
+        title="Per-app performance"
+        columns={[
+          {
+            key: "app_id",
+            header: "App",
+            render: (e) => appNames.get(e.app_id) ?? <code className="text-xs">{e.app_id}</code>,
+          },
+          { key: "period", header: "Period", render: (e) => e.period },
+          { key: "ad_type", header: "Format", render: (e) => e.ad_type },
+          { key: "impressions", header: "Impressions", render: (e) => formatCount(e.impressions) },
+          { key: "revenue", header: "Revenue", render: (e) => formatKobo(e.revenue_kobo) },
+        ]}
+        rows={earnings.data ?? []}
+        error={earnings.error}
+        emptyMessage="No earnings rows yet."
+        getRowKey={(e) => e.id}
+      />
     </div>
   );
 }

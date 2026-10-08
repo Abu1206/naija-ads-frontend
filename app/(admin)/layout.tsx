@@ -1,25 +1,20 @@
-import Link from "next/link";
+import { DashboardShell, type NavItem } from "@/components/DashboardShell";
+import { requireRole } from "@/lib/auth";
 
-const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/reviews", label: "Reviews" },
-  { href: "/admin/payments", label: "Payments" },
-  { href: "/admin/fraud", label: "Fraud" },
-  { href: "/admin/audit", label: "Audit" },
-] as const;
+const NAV: NavItem[] = [
+  { href: "/admin", label: "Overview", icon: "overview" },
+  { href: "/admin/reviews", label: "Review queues", icon: "reviews" },
+  { href: "/admin/payments", label: "Payments", icon: "billing" },
+  { href: "/admin/fraud", label: "Fraud alerts", icon: "fraud" },
+  { href: "/admin/audit", label: "Audit logs", icon: "audit" },
+];
 
-/** Admin dashboard shell: sub-nav for overview, reviews, payments, fraud, audit. */
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  await requireRole("admin");
+
   return (
-    <div className="space-y-6">
-      <nav aria-label="Admin" className="flex flex-wrap gap-x-5 gap-y-2 border-b pb-3 text-sm">
-        {NAV.map((l) => (
-          <Link key={l.href} href={l.href} className="text-gray-600 hover:text-gray-900">
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+    <DashboardShell section="Admin" items={NAV}>
       {children}
-    </div>
+    </DashboardShell>
   );
 }

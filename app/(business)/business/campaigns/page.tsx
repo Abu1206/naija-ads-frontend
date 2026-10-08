@@ -1,40 +1,61 @@
-import { requireRole } from "@/lib/auth";
+import { PageHeader } from "@/components/DashboardShell";
 import { DataTable } from "@/components/DataTable";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatCTR, formatKobo } from "@/lib/format";
+import { load } from "@/lib/api";
+import { endpoints } from "@/lib/endpoints";
+import { formatCTR, formatCount, formatKobo } from "@/lib/format";
 import type { Campaign } from "@/lib/types";
 
-// Phase 1 shell: wired to GET /api/v1/campaigns once the backend is live.
-// Server component for reads per AGENTS.md §2.
+/** Campaign list with the §22 per-campaign metrics and §12 review status. */
 export default async function CampaignsPage() {
-  await requireRole("business");
-  const campaigns: Campaign[] = [];
+  const { data, error } = await load<Campaign[]>(endpoints.campaigns);
+  const campaigns = data ?? [];
+
+  const totals = campaigns.reduce(
+    (acc, c) => ({
+      impressions: acc.impressions + c.impressions,
+      clicks: acc.clicks + c.clicks,
+    }),
+    { impressions: 0, clicks: 0 },
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Campaigns</h1>
-        <a
-          href="/business/campaigns/new"
-          className="rounded bg-black px-4 py-2 text-sm font-medium text-white"
-        >
-          New campaign
-        </a>
-      </div>
+      <PageHeader
+        title="Campaigns"
+        subtitle="Every campaign you have submitted, with its review state."
+        cta={{ href: "/business/campaigns/new", label: "New campaign" }}
+      />
+
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Impressions" value="—" />
-        <MetricCard label="Clicks" value="—" />
-        <MetricCard label="CTR" value={formatCTR(0, 0)} />
+        <MetricCard label="Campaigns" value={error ? "—" : formatCount(campaigns.length)} icon="campaigns" error={error} />
+        <MetricCard label="Impressions" value={error ? "—" : formatCount(totals.impressions)} icon="analytics" error={error} />
+        <MetricCard
+          label="CTR"
+          value={error ? "—" : formatCTR(totals.clicks, totals.impressions)}
+          icon="overview"
+          error={error}
+        />
       </div>
+
       <DataTable<Campaign>
         columns={[
-          { key: "name", header: "Name", render: (c) => c.name },
+          { key: "name", header: "Campaign", render: (c) => <span className="font-medium">{c.name}</span> },
+          { key: "format", header: "Format", render: (c) => c.ad_type },
           { key: "status", header: "Status", render: (c) => <StatusBadge status={c.status} /> },
+          { key: "impressions", header: "Impressions", render: (c) => formatCount(c.impressions) },
+          { key: "clicks", header: "Clicks", render: (c) => formatCount(c.clicks) },
+          { key: "ctr", header: "CTR", render: (c) => formatCTR(c.clicks, c.impressions) },
           { key: "spend", header: "Spend", render: (c) => formatKobo(c.spend_kobo) },
-          { key: "budget", header: "Budget", render: (c) => formatKobo(c.budget_kobo) },
+          {
+            key: "remaining",
+            header: "Remaining",
+            render: (c) => formatKobo(c.remaining_budget_kobo),
+          },
         ]}
         rows={campaigns}
+        error={error}
         emptyMessage="No campaigns yet. Create your first campaign to start advertising."
         getRowKey={(c) => c.id}
       />

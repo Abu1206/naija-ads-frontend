@@ -1,57 +1,40 @@
+import { PageHeader } from "@/components/DashboardShell";
+import { ProfileForm, type ProfileField } from "@/components/ProfileForm";
 import { requireRole } from "@/lib/auth";
+import { endpoints } from "@/lib/endpoints";
 
-/**
- * Business onboarding: profile (name, country, phone, representative,
- * registration, website, vertical) then submit for manual verification.
- * Wiring lands with the backend profile endpoints.
- */
+// Spec §9.2 — the profile the advertiser submits for manual verification (§9.3).
+const fields: ProfileField[] = [
+  { name: "name", label: "Business name", required: true, placeholder: "Acme Foods Ltd" },
+  { name: "industry", label: "Industry", required: true, placeholder: "Food & beverage" },
+  { name: "website", label: "Website", type: "url", placeholder: "https://acme.ng" },
+  { name: "location", label: "Location", required: true, placeholder: "Lagos, Nigeria" },
+  {
+    name: "description",
+    label: "Business description",
+    type: "textarea",
+    placeholder: "What you sell and who you want to reach.",
+  },
+];
+
+/** Business onboarding: profile + submit for one-time manual verification. */
 export default async function BusinessOnboardingPage() {
   await requireRole("business");
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold">Set up your business profile</h1>
-      <p className="text-sm text-gray-600">
-        Complete your profile and submit it for a one-time manual verification. Campaigns unlock
-        once approved.
-      </p>
-      <form className="space-y-4" action="#" method="post">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium">
-            Business name
-          </label>
-          <input id="name" name="name" required className="mt-1 w-full rounded border px-3 py-2" />
-        </div>
-        <div>
-          <label htmlFor="country_code" className="block text-sm font-medium">
-            Country code
-          </label>
-          <input
-            id="country_code"
-            name="country_code"
-            required
-            placeholder="NG"
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-        <div>
-          <label htmlFor="vertical" className="block text-sm font-medium">
-            Vertical
-          </label>
-          <input
-            id="vertical"
-            name="vertical"
-            placeholder="e.g. food, investment"
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white"
-        >
-          Save and submit for verification
-        </button>
-      </form>
+    <div className="space-y-6">
+      <PageHeader
+        title="Business profile"
+        subtitle="Campaigns unlock once an admin approves your verification."
+      />
+      <div className="rounded-xl border bg-white p-6">
+        <ProfileForm
+          endpoint={endpoints.businesses}
+          fields={fields}
+          submitLabel="Save and submit for verification"
+          successNote="Profile saved. Verification is pending manual admin review."
+        />
+      </div>
     </div>
   );
 }

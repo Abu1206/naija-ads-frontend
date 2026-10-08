@@ -1,24 +1,21 @@
-import Link from "next/link";
+import { DashboardShell, type NavItem } from "@/components/DashboardShell";
+import { requireRole } from "@/lib/auth";
 
-const NAV = [
-  { href: "/business/campaigns", label: "Campaigns" },
-  { href: "/business/creatives", label: "Creatives" },
-  { href: "/business/analytics", label: "Analytics" },
-  { href: "/business/billing", label: "Billing" },
-] as const;
+const NAV: NavItem[] = [
+  { href: "/business", label: "Overview", icon: "overview" },
+  { href: "/business/campaigns", label: "Campaigns", icon: "campaigns" },
+  { href: "/business/creatives", label: "Creatives", icon: "creatives" },
+  { href: "/business/analytics", label: "Analytics", icon: "analytics" },
+  { href: "/business/billing", label: "Billing", icon: "billing" },
+  { href: "/business/onboarding", label: "Profile", icon: "onboarding" },
+];
 
-/** Business dashboard shell: sub-nav for campaigns, creatives, analytics, billing. */
-export default function BusinessLayout({ children }: { children: React.ReactNode }) {
+export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
+  await requireRole("business");
+
   return (
-    <div className="space-y-6">
-      <nav aria-label="Business" className="flex flex-wrap gap-x-5 gap-y-2 border-b pb-3 text-sm">
-        {NAV.map((l) => (
-          <Link key={l.href} href={l.href} className="text-gray-600 hover:text-gray-900">
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+    <DashboardShell section="Business" items={NAV}>
       {children}
-    </div>
+    </DashboardShell>
   );
 }
