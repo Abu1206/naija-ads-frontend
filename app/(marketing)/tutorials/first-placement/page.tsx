@@ -18,18 +18,18 @@ const STEPS = [
 export default function FirstPlacementTutorialPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-3xl font-bold">Monetize your first placement</h1>
+      <h1 className="font-display text-3xl font-bold text-ink">Monetize your first placement</h1>
       <ol className="space-y-3">
         {STEPS.map((s, i) => (
-          <li key={s.title} className="rounded border bg-white p-4">
+          <li key={s.title} className="rounded-card border border-mist bg-white p-4">
             <p className="font-medium">
               {i + 1}. {s.title}
             </p>
-            <p className="text-sm text-gray-600">{s.body}</p>
+            <p className="text-sm text-muted">{s.body}</p>
           </li>
         ))}
       </ol>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         Reference alongside: <Link href="/docs/web-sdk" className="underline">web SDK</Link> ·{" "}
         <Link href="/docs/formats" className="underline">formats & placements</Link> ·{" "}
         <Link href="/docs/test-mode" className="underline">test mode</Link>.

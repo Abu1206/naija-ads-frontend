@@ -22,15 +22,15 @@ const ITEMS = [
 export default function TutorialsIndexPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Tutorials</h1>
-      <p className="max-w-2xl text-gray-600">
+      <h1 className="font-display text-3xl font-bold text-ink">Tutorials</h1>
+      <p className="max-w-2xl text-muted">
         Short, ordered walkthroughs with the exact pages to visit. No prior ad-tech knowledge needed.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {ITEMS.map((t) => (
-          <Link key={t.href} href={t.href} className="rounded border bg-white p-4 hover:bg-gray-50">
+          <Link key={t.href} href={t.href} className="rounded-card border border-mist bg-white p-4 hover:bg-cloud">
             <p className="font-medium">{t.title}</p>
-            <p className="text-sm text-gray-600">{t.body}</p>
+            <p className="text-sm text-muted">{t.body}</p>
           </Link>
         ))}
       </div>
