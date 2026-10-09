@@ -27,7 +27,7 @@ export default async function BusinessOnboardingPage() {
         title="Business profile"
         subtitle="Campaigns unlock once an admin approves your verification."
       />
-      <div className="rounded-xl border bg-white p-6">
+      <div className="rounded-card border border-mist bg-white p-6">
         <ProfileForm
           endpoint={endpoints.businesses}
           fields={fields}

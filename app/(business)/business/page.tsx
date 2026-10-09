@@ -61,14 +61,14 @@ export default async function BusinessOverviewPage() {
         />
       </div>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Delivery</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Delivery</h2>
         {analytics.error ? (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+          <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
             {analytics.error}
           </p>
         ) : series.length === 0 ? (
-          <p className="rounded-lg border p-6 text-center text-gray-500">
+          <p className="rounded-lg border border-mist p-6 text-center text-muted">
             No delivery yet. Data appears once a campaign is approved and funded.
           </p>
         ) : (
@@ -84,7 +84,7 @@ export default async function BusinessOverviewPage() {
       <DataTable<Campaign>
         title="Campaign performance"
         action={
-          <a href="/business/campaigns" className="text-sm font-medium text-brand-strong hover:underline">
+          <a href="/business/campaigns" className="text-sm font-medium text-pine hover:underline">
             View all
           </a>
         }

@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { PageHeader } from "@/components/DashboardShell";
+import { Button } from "@/components/Button";
 import { DataTable } from "@/components/DataTable";
 import { FundForm } from "@/components/FundForm";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
+import { WalletCard } from "@/components/WalletCard";
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { formatDate, formatKobo } from "@/lib/format";
@@ -20,25 +23,28 @@ export default async function BillingPage() {
     <div className="space-y-6">
       <PageHeader title="Billing" subtitle="Fund your account and audit every credit and debit." />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Balance" value="—" hint="needs a wallet aggregate" icon="billing" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <WalletCard
+          label="Remaining budget"
+          balance={analytics.data ? formatKobo(analytics.data.remaining_budget_kobo) : "—"}
+          hint="The most your campaigns can still spend. Topped up below via Bachs."
+          action={
+            <Link href="#add-funds">
+              <Button variant="gold">Fund wallet</Button>
+            </Link>
+          }
+        />
         <MetricCard
           label="Total spend"
           value={analytics.data ? formatKobo(analytics.data.spend_kobo) : "—"}
           icon="campaigns"
           error={analytics.error}
         />
-        <MetricCard
-          label="Remaining budget"
-          value={analytics.data ? formatKobo(analytics.data.remaining_budget_kobo) : "—"}
-          icon="overview"
-          error={analytics.error}
-        />
       </div>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-1 font-semibold">Add funds</h2>
-        <p className="mb-4 text-sm text-gray-500">
+      <section id="add-funds" className="rounded-card border border-mist bg-white p-5 scroll-mt-4">
+        <h2 className="mb-1 font-display font-semibold text-ink">Add funds</h2>
+        <p className="mb-4 text-sm text-muted">
           You will be redirected to a Bachs checkout created by the backend. Your balance updates
           when the webhook confirms the payment, never from the redirect alone.
         </p>
