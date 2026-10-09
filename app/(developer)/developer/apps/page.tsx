@@ -46,8 +46,8 @@ export default async function AppsPage() {
         cta={{ href: "/developer/placements", label: "Manage placements" }}
       />
 
-      <section className="rounded-xl border bg-white p-6">
-        <h2 className="mb-4 font-semibold">Register an app</h2>
+      <section className="rounded-card border border-mist bg-white p-6">
+        <h2 className="mb-4 font-display font-semibold text-ink">Register an app</h2>
         <ProfileForm
           endpoint={endpoints.apps}
           fields={fields}

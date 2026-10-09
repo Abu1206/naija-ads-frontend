@@ -46,10 +46,10 @@ export default async function PlacementsPage() {
         subtitle="Banner, interstitial, rewarded and audio slots per app — each gets its own PLACEMENT_ID."
       />
 
-      <section className="rounded-xl border bg-white p-6">
-        <h2 className="mb-4 font-semibold">Create a placement</h2>
+      <section className="rounded-card border border-mist bg-white p-6">
+        <h2 className="mb-4 font-display font-semibold text-ink">Create a placement</h2>
         {appOptions.length === 0 ? (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             {apps.error ??
               "Register an app first — placements are created inside an app. Head to Apps to get started."}
           </p>

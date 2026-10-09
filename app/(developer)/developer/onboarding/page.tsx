@@ -36,7 +36,7 @@ export default async function DeveloperOnboardingPage() {
         title="Developer profile"
         subtitle="App registration unlocks once an admin approves your verification."
       />
-      <div className="rounded-xl border bg-white p-6">
+      <div className="rounded-card border border-mist bg-white p-6">
         <ProfileForm
           endpoint={endpoints.developers}
           fields={fields}
