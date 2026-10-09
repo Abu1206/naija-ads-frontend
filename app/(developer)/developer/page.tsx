@@ -99,8 +99,8 @@ export default async function DeveloperOverviewPage() {
         columns={[
           { key: "app_id", header: "App", render: (e) => <code className="text-xs">{e.app_id}</code> },
           { key: "ad_type", header: "Format", render: (e) => e.ad_type },
-          { key: "impressions", header: "Impressions", render: (e) => formatCount(e.impressions) },
-          { key: "revenue", header: "Revenue", render: (e) => formatKobo(e.revenue_kobo) },
+          { key: "impressions", header: "Impressions", numeric: true, render: (e) => formatCount(e.impressions) },
+          { key: "revenue", header: "Revenue", numeric: true, render: (e) => formatKobo(e.revenue_kobo) },
           { key: "status", header: "Status", render: (e) => <StatusBadge status={e.status} /> },
         ]}
         rows={earnings.data ?? []}
@@ -117,7 +117,7 @@ export default async function DeveloperOverviewPage() {
           </a>
         }
         columns={[
-          { key: "requested", header: "Requested", render: (p) => formatKobo(p.amount_kobo) },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
           { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
         ]}
         rows={(payouts.data ?? []).slice(0, 5)}

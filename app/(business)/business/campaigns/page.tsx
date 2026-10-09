@@ -44,13 +44,14 @@ export default async function CampaignsPage() {
           { key: "name", header: "Campaign", render: (c) => <span className="font-medium">{c.name}</span> },
           { key: "format", header: "Format", render: (c) => c.ad_type },
           { key: "status", header: "Status", render: (c) => <StatusBadge status={c.status} /> },
-          { key: "impressions", header: "Impressions", render: (c) => formatCount(c.impressions) },
-          { key: "clicks", header: "Clicks", render: (c) => formatCount(c.clicks) },
-          { key: "ctr", header: "CTR", render: (c) => formatCTR(c.clicks, c.impressions) },
-          { key: "spend", header: "Spend", render: (c) => formatKobo(c.spend_kobo) },
+          { key: "impressions", header: "Impressions", numeric: true, render: (c) => formatCount(c.impressions) },
+          { key: "clicks", header: "Clicks", numeric: true, render: (c) => formatCount(c.clicks) },
+          { key: "ctr", header: "CTR", numeric: true, render: (c) => formatCTR(c.clicks, c.impressions) },
+          { key: "spend", header: "Spend", numeric: true, render: (c) => formatKobo(c.spend_kobo) },
           {
             key: "remaining",
             header: "Remaining",
+            numeric: true,
             render: (c) => formatKobo(c.remaining_budget_kobo),
           },
         ]}

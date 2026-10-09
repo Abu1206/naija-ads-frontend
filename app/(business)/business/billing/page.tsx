@@ -56,7 +56,7 @@ export default async function BillingPage() {
         title="Payments"
         columns={[
           { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
-          { key: "amount", header: "Amount", render: (p) => formatKobo(p.amount_kobo) },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
           { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
           { key: "created", header: "Created", render: (p) => formatDate(p.created_at) },
         ]}

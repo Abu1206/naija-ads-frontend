@@ -53,7 +53,7 @@ export default async function PayoutsPage() {
       <DataTable<Payout>
         title="Payout history"
         columns={[
-          { key: "amount", header: "Amount", render: (p) => formatKobo(p.amount_kobo) },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
           { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
           { key: "requested_at", header: "Requested", render: (p) => formatDate(p.requested_at) },
           {

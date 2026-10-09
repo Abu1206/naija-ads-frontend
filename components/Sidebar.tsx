@@ -153,6 +153,7 @@ export function Sidebar({ section, items }: { section: string; items: NavItem[] 
             onClick={() => setCollapsed((value) => !value)}
             aria-expanded={!collapsed}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={`absolute top-1/2 hidden min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-lg text-muted transition-[right_400ms_cubic-bezier(0.75,0,0.25,1),background-color_150ms,color_150ms] ease hover:bg-mint hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija md:inline-flex motion-reduce:transition-none ${
               collapsed ? "right-[calc(50%-22px)]" : "right-2"
             }`}

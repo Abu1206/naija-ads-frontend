@@ -92,7 +92,7 @@ export default async function ReviewsPage() {
         columns={[
           { key: "name", header: "Campaign", render: (c) => <span className="font-medium">{c.name}</span> },
           { key: "ad_type", header: "Format", render: (c) => c.ad_type },
-          { key: "budget", header: "Budget", render: (c) => formatKobo(c.total_budget_kobo) },
+          { key: "budget", header: "Budget", numeric: true, render: (c) => formatKobo(c.total_budget_kobo) },
           { key: "created", header: "Submitted", render: (c) => formatDate(c.created_at) },
           { key: "status", header: "Status", render: (c) => <StatusBadge status={c.status} /> },
           { key: "review", header: "Decision", render: (c) => decision("campaign", c.id) },

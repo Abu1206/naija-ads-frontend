@@ -80,8 +80,8 @@ export default async function EarningsPage() {
           { key: "period", header: "Period", render: (e) => e.period },
           { key: "app_id", header: "App", render: (e) => <code className="text-xs">{e.app_id}</code> },
           { key: "ad_type", header: "Format", render: (e) => e.ad_type },
-          { key: "impressions", header: "Impressions", render: (e) => formatCount(e.impressions) },
-          { key: "revenue", header: "Revenue", render: (e) => formatKobo(e.revenue_kobo) },
+          { key: "impressions", header: "Impressions", numeric: true, render: (e) => formatCount(e.impressions) },
+          { key: "revenue", header: "Revenue", numeric: true, render: (e) => formatKobo(e.revenue_kobo) },
           { key: "status", header: "Status", render: (e) => <StatusBadge status={e.status} /> },
         ]}
         rows={rows}

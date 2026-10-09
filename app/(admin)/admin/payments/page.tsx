@@ -58,7 +58,7 @@ export default async function AdminPaymentsPage() {
         columns={[
           { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
           { key: "business_id", header: "Business", render: (p) => <code className="text-xs">{p.business_id}</code> },
-          { key: "amount", header: "Amount", render: (p) => formatKobo(p.amount_kobo) },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
           { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
           { key: "created_at", header: "Created", render: (p) => formatDate(p.created_at) },
         ]}
@@ -72,7 +72,7 @@ export default async function AdminPaymentsPage() {
         title="Payout requests"
         columns={[
           { key: "developer_id", header: "Developer", render: (p) => <code className="text-xs">{p.developer_id}</code> },
-          { key: "amount", header: "Amount", render: (p) => formatKobo(p.amount_kobo) },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
           { key: "requested", header: "Requested", render: (p) => formatDate(p.requested_at) },
           { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
           {

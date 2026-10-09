@@ -62,7 +62,7 @@ Fewer fonts also means a faster first load, which matters for people on mobile d
 
 ## Shape and space
 
-Flat and bordered. One pixel Mist borders, almost no shadows, no gradients. Radius is 8 for buttons and inputs, 14 for cards, 20 for the wallet card, and a full pill for badges. Spacing runs on 4, 8, 12, 16, 24, 32 and 48.
+Flat and light. Table and chart panels stand alone on the Cloud page ground with no enclosing border — the white tint carries the edge. One-pixel Mist still separates what needs separating: row dividers, title rules, popovers and the nav rail. Almost no shadows, no gradients. Radius is 8 for buttons and inputs, 14 for cards, 20 for the wallet card, and a full pill for badges. Spacing runs on 4, 8, 12, 16, 24, 32 and 48.
 
 ## Components
 
