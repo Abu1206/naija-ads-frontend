@@ -16,20 +16,20 @@ const CARDS = [
 export default function DocsIndexPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Developer docs</h1>
-      <p className="max-w-2xl text-gray-600">
+      <h1 className="font-display text-3xl font-bold text-ink">Developer docs</h1>
+      <p className="max-w-2xl text-muted">
         Everything a publisher needs: register an app, create placements, integrate the SDK, and
         get paid. Field names match the backend API exactly.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {CARDS.map((c) => (
-          <Link key={c.href} href={c.href} className="rounded border bg-white p-4 hover:bg-gray-50">
+          <Link key={c.href} href={c.href} className="rounded-card border border-mist bg-white p-4 hover:bg-cloud">
             <p className="font-medium">{c.title}</p>
-            <p className="text-sm text-gray-600">{c.body}</p>
+            <p className="text-sm text-muted">{c.body}</p>
           </Link>
         ))}
       </div>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         Prefer learning by doing? Try the{" "}
         <Link href="/tutorials/first-placement" className="underline">
           first-placement tutorial

@@ -17,7 +17,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <Link
             key={l.href}
             href={l.href}
-            className="block rounded px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            className="flex min-h-[44px] items-center rounded px-3 py-2 text-muted hover:bg-cloud hover:text-ink"
           >
             {l.label}
           </Link>
