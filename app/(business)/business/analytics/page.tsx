@@ -1,9 +1,9 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { DeliveryChart, type DeliveryPoint, deliveryLabel } from "@/components/DeliveryChart";
+import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
-import { formatCTR, formatCount, formatKobo } from "@/lib/format";
+import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
 import type { AnalyticsSummary } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -31,18 +31,19 @@ export default async function BusinessAnalyticsPage() {
         <MetricCard label="Spend" value={summary ? formatKobo(summary.spend_kobo) : "—"} icon="billing" tone="money" error={error} />
       </div>
 
-      <section className="rounded-card border border-mist bg-white p-5">
-        <h2 className="mb-4 font-display font-semibold text-ink">Impressions and CTR</h2>
-        {error ? (
-          <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
-            {error}
-          </p>
-        ) : series.length === 0 ? (
-          <p className="rounded-lg border border-mist p-6 text-center text-muted">Nothing to chart yet.</p>
-        ) : (
-          <DeliveryChart data={series} ariaLabel="Delivery over time" />
-        )}
-      </section>
+      {error ? (
+        <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
+          {error}
+        </p>
+      ) : series.length === 0 ? (
+        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">Nothing to chart yet.</p>
+      ) : (
+        <DeliveryChart
+          data={series}
+          title="Impressions and CTR"
+          description="Views and click-through rate reported by the ad server."
+        />
+      )}
 
       <section className="rounded-card border border-mist bg-white p-5">
         <h2 className="mb-4 font-display font-semibold text-ink">Format breakdown</h2>

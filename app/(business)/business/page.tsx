@@ -1,11 +1,11 @@
 import { PageHeader } from "@/components/DashboardShell";
 import { DataTable } from "@/components/DataTable";
-import { DeliveryChart, type DeliveryPoint, deliveryLabel } from "@/components/DeliveryChart";
+import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
-import { formatCTR, formatCount, formatKobo } from "@/lib/format";
+import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
 import type { AnalyticsSummary, Campaign } from "@/lib/types";
 
 /**
@@ -62,20 +62,17 @@ export default async function BusinessOverviewPage() {
         />
       </div>
 
-      <section className="rounded-card border border-mist bg-white p-5">
-        <h2 className="mb-4 font-display font-semibold text-ink">Delivery</h2>
-        {analytics.error ? (
-          <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
-            {analytics.error}
-          </p>
-        ) : series.length === 0 ? (
-          <p className="rounded-lg border border-mist p-6 text-center text-muted">
-            No delivery yet. Data appears once a campaign is approved and funded.
-          </p>
-        ) : (
-          <DeliveryChart data={series} ariaLabel="Impressions and CTR by month" />
-        )}
-      </section>
+      {analytics.error ? (
+        <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
+          {analytics.error}
+        </p>
+      ) : series.length === 0 ? (
+        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">
+          No delivery yet. Data appears once a campaign is approved and funded.
+        </p>
+      ) : (
+        <DeliveryChart data={series} title="Delivery" description="Views and click-through rate by period." />
+      )}
 
       <DataTable<Campaign>
         title="Campaign performance"

@@ -1,11 +1,11 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { DeliveryChart, type DeliveryPoint, deliveryLabel } from "@/components/DeliveryChart";
+import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
 import { DataTable } from "@/components/DataTable";
 import { MetricCard } from "@/components/MetricCard";
 import { load } from "@/lib/api";
 import { requireRole } from "@/lib/auth";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
-import { formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
+import { deliveryLabel, formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
 import type { AnalyticsSummary, App, DeveloperEarning } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -65,20 +65,21 @@ export default async function DeveloperAnalyticsPage() {
         />
       </div>
 
-      <section className="rounded-card border border-mist bg-white p-5">
-        <h2 className="mb-4 font-display font-semibold text-ink">Delivery</h2>
-        {analytics.error ? (
-          <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
-            {analytics.error}
-          </p>
-        ) : series.length === 0 ? (
-          <p className="rounded-lg border border-mist p-6 text-center text-muted">
-            No delivery yet. Fill data appears once the SDK serves its first ad.
-          </p>
-        ) : (
-          <DeliveryChart data={series} ariaLabel="Impressions and CTR by period" />
-        )}
-      </section>
+      {analytics.error ? (
+        <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
+          {analytics.error}
+        </p>
+      ) : series.length === 0 ? (
+        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">
+          No delivery yet. Fill data appears once the SDK serves its first ad.
+        </p>
+      ) : (
+        <DeliveryChart
+          data={series}
+          title="Delivery"
+          description="Views and click-through rate across every app you monetize."
+        />
+      )}
 
       <section className="rounded-card border border-mist bg-white p-5">
         <h2 className="mb-4 font-display font-semibold text-ink">Revenue by format</h2>
