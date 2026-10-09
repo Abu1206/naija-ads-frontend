@@ -26,9 +26,14 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * Card titles are section headings in this app — the page `h1` comes from
+ * PageHeader, so the primitive renders an `h2` and keeps one heading level per
+ * card instead of an anonymous div.
+ */
+function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
-    <div
+    <h2
       data-slot="card-title"
       className={cn("font-display leading-none font-semibold tracking-tight", className)}
       {...props}

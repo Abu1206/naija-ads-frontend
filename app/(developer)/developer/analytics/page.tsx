@@ -1,11 +1,13 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
+import { DeliveryChartSection } from "@/components/DeliveryChartSection";
+import type { DeliveryPoint } from "@/components/DeliveryChart";
 import { DataTable } from "@/components/DataTable";
 import { MetricCard } from "@/components/MetricCard";
 import { load } from "@/lib/api";
 import { requireRole } from "@/lib/auth";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { deliveryLabel, formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
+import { parseChartMetric, parseChartRange } from "@/lib/ranges";
 import type { AnalyticsSummary, App, DeveloperEarning } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -13,10 +15,17 @@ import { AD_TYPES } from "@/lib/types";
  * Developer analytics (spec §22): impressions, fill rate, estimated revenue and
  * the banner/interstitial/rewarded/audio split — all backend-computed and displayed only.
  */
-export default async function DeveloperAnalyticsPage() {
+export default async function DeveloperAnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   await requireRole("developer");
+  const params = await searchParams;
+  const range = parseChartRange(params.range);
+  const metric = parseChartMetric(params.metric);
   const [analytics, apps, earnings] = await Promise.all([
-    load<AnalyticsSummary>(analyticsFor("developer")),
+    load<AnalyticsSummary>(analyticsFor("developer", range)),
     load<App[]>(endpoints.apps),
     load<DeveloperEarning[]>(endpoints.earnings),
   ]);
@@ -69,14 +78,13 @@ export default async function DeveloperAnalyticsPage() {
         <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
           {analytics.error}
         </p>
-      ) : series.length === 0 ? (
-        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">
-          No delivery yet. Fill data appears once the SDK serves its first ad.
-        </p>
       ) : (
-        <DeliveryChart
+        <DeliveryChartSection
+          key={`${range}-${metric}`}
           data={series}
           title="Delivery"
+          range={range}
+          metric={metric}
         />
       )}
 

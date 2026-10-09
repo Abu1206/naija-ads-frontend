@@ -1,13 +1,16 @@
 import { PageHeader } from "@/components/DashboardShell";
 import { DataTable } from "@/components/DataTable";
-import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
+import { DeliveryChartSection } from "@/components/DeliveryChartSection";
+import type { DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { SpendFooter } from "@/components/SpendFooter";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
-import { attentionFlags, detectGrain, seriesDeltas } from "@/lib/insights";
+import { attentionFlags, seriesDeltas } from "@/lib/insights";
+import { parseChartMetric, parseChartRange } from "@/lib/ranges";
 import { AD_TYPES, type AnalyticsSummary, type Campaign } from "@/lib/types";
 
 /**
@@ -18,20 +21,28 @@ import { AD_TYPES, type AnalyticsSummary, type Campaign } from "@/lib/types";
  * working, where is my budget going, and what needs my attention". Publishers
  * get the mirrored view at /developer (fill rate, eCPM, payouts).
  */
-export default async function BusinessOverviewPage() {
+export default async function BusinessOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const range = parseChartRange(params.range);
+  const metric = parseChartMetric(params.metric);
   const campaigns = await load<Campaign[]>(endpoints.campaigns);
-  const analytics = await load<AnalyticsSummary>(analyticsFor("business"));
+  const analytics = await load<AnalyticsSummary>(analyticsFor("business", range));
 
   const summary = analytics.data;
   const rows = campaigns.data ?? [];
   const rawSeries = summary?.series ?? [];
-  const grain = detectGrain(rawSeries.map((p) => p.period));
   const series: DeliveryPoint[] =
     rawSeries.map((point) => ({
       label: deliveryLabel(point.period),
       impressions: point.impressions,
       clicks: point.clicks,
     }));
+  // Deltas compare the window's last two points — day-over-day on a daily
+  // window ("vs 7 Oct"), month-over-month on 6M — while the cards stay all-time.
   const deltas = seriesDeltas(rawSeries, deliveryLabel);
   const vsCaption = deltas.prevLabel ? `vs ${deltas.prevLabel}` : undefined;
 
@@ -93,15 +104,13 @@ export default async function BusinessOverviewPage() {
         <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
           {analytics.error}
         </p>
-      ) : series.length === 0 ? (
-        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">
-          No delivery yet. Data appears once a campaign is approved and funded.
-        </p>
       ) : (
-        <DeliveryChart
+        <DeliveryChartSection
+          key={`${range}-${metric}`}
           data={series}
-          grain={grain}
           title="Delivery"
+          range={range}
+          metric={metric}
         />
       )}
 
@@ -140,75 +149,83 @@ export default async function BusinessOverviewPage() {
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section aria-label="Needs attention" className="rounded-card border border-mist bg-white p-5">
-          <h2 className="font-display font-semibold text-ink">Needs attention</h2>
-          <p className="mt-0.5 text-sm text-muted">Campaigns asking for a decision.</p>
-          {campaigns.error ? (
-            <p role="alert" className="mt-4 rounded-lg border border-alert/30 bg-blush p-4 text-center text-sm text-alert">
-              {campaigns.error}
-            </p>
-          ) : flags.length === 0 ? (
-            <p className="mt-4 rounded-lg border border-mist p-4 text-center text-sm text-muted">
-              All clear — every campaign is delivering or waiting its turn.
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {flags.map(({ campaign, reason }) => (
-                <li key={campaign.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-mist px-4 py-3">
-                  <div className="min-w-0">
-                    <a
-                      href="/business/campaigns"
-                      aria-label={`View ${campaign.name} in campaigns`}
-                      className="block truncate text-sm font-medium text-pine hover:underline"
-                    >
-                      {campaign.name}
-                    </a>
-                    <p className="mt-0.5 text-xs text-muted">{reason}</p>
-                  </div>
-                  <StatusBadge status={campaign.status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section aria-label="Delivery by format" className="rounded-card border border-mist bg-white p-5">
-          <h2 className="font-display font-semibold text-ink">Delivery by format</h2>
-          <p className="mt-0.5 text-sm text-muted">Where your impressions land.</p>
-          {analytics.error ? (
-            <p role="alert" className="mt-4 rounded-lg border border-alert/30 bg-blush p-4 text-center text-sm text-alert">
-              {analytics.error}
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-4">
-              {AD_TYPES.map((format) => {
-                const row = formats[format];
-                const impressions = row?.impressions ?? 0;
-                const share = maxFormatImpressions > 0 ? impressions / maxFormatImpressions : 0;
-                return (
-                  <li key={format}>
-                    <div className="flex items-baseline justify-between gap-2 text-sm">
-                      <span className="font-medium capitalize text-ink">{format}</span>
-                      <span className="text-muted">
-                        {row ? `${formatCount(impressions)} · ${formatCTR(row.clicks, impressions)} CTR` : "No delivery"}
-                      </span>
+        <Card role="region" aria-label="Needs attention">
+          <CardHeader>
+            <CardTitle>Needs attention</CardTitle>
+            <CardDescription>Campaigns asking for a decision.</CardDescription>
+          </CardHeader>
+          <CardContent className="mt-4">
+            {campaigns.error ? (
+              <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-4 text-center text-sm text-alert">
+                {campaigns.error}
+              </p>
+            ) : flags.length === 0 ? (
+              <p className="rounded-lg border border-mist p-4 text-center text-sm text-muted">
+                All clear — every campaign is delivering or waiting its turn.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {flags.map(({ campaign, reason }) => (
+                  <li key={campaign.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-mist px-4 py-3">
+                    <div className="min-w-0">
+                      <a
+                        href="/business/campaigns"
+                        aria-label={`View ${campaign.name} in campaigns`}
+                        className="block truncate text-sm font-medium text-pine hover:underline"
+                      >
+                        {campaign.name}
+                      </a>
+                      <p className="mt-0.5 text-xs text-muted">{reason}</p>
                     </div>
-                    <div
-                      className="mt-1.5 h-2 rounded-full bg-cloud"
-                      role="progressbar"
-                      aria-label={`${format} share of delivery`}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={Math.round(share * 100)}
-                    >
-                      <div className="h-full rounded-full bg-naija" style={{ width: `${share * 100}%` }} />
-                    </div>
+                    <StatusBadge status={campaign.status} />
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card role="region" aria-label="Delivery by format">
+          <CardHeader>
+            <CardTitle>Delivery by format</CardTitle>
+            <CardDescription>Where your impressions land.</CardDescription>
+          </CardHeader>
+          <CardContent className="mt-4">
+            {analytics.error ? (
+              <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-4 text-center text-sm text-alert">
+                {analytics.error}
+              </p>
+            ) : (
+              <ul className="space-y-4">
+                {AD_TYPES.map((format) => {
+                  const row = formats[format];
+                  const impressions = row?.impressions ?? 0;
+                  const share = maxFormatImpressions > 0 ? impressions / maxFormatImpressions : 0;
+                  return (
+                    <li key={format}>
+                      <div className="flex items-baseline justify-between gap-2 text-sm">
+                        <span className="font-medium capitalize text-ink">{format}</span>
+                        <span className="text-muted">
+                          {row ? `${formatCount(impressions)} · ${formatCTR(row.clicks, impressions)} CTR` : "No delivery"}
+                        </span>
+                      </div>
+                      <div
+                        className="mt-1.5 h-2 rounded-full bg-cloud"
+                        role="progressbar"
+                        aria-label={`${format} share of delivery`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(share * 100)}
+                      >
+                        <div className="h-full rounded-full bg-naija" style={{ width: `${share * 100}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

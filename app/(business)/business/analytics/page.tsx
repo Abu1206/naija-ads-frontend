@@ -1,20 +1,28 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
+import { DeliveryChartSection } from "@/components/DeliveryChartSection";
+import type { DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { SpendFooter } from "@/components/SpendFooter";
 import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
-import { detectGrain, seriesDeltas } from "@/lib/insights";
+import { seriesDeltas } from "@/lib/insights";
+import { parseChartMetric, parseChartRange } from "@/lib/ranges";
 import type { AnalyticsSummary } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
 /** Impressions, clicks, CTR, spend and format breakdown — all backend-computed. */
-export default async function BusinessAnalyticsPage() {
-  const { data: summary, error } = await load<AnalyticsSummary>(analyticsFor("business"));
+export default async function BusinessAnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const range = parseChartRange(params.range);
+  const metric = parseChartMetric(params.metric);
+  const { data: summary, error } = await load<AnalyticsSummary>(analyticsFor("business", range));
 
   const rawSeries = summary?.series ?? [];
-  const grain = detectGrain(rawSeries.map((p) => p.period));
   const series: DeliveryPoint[] =
     rawSeries.map((point) => ({
       label: deliveryLabel(point.period),
@@ -70,13 +78,13 @@ export default async function BusinessAnalyticsPage() {
         <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
           {error}
         </p>
-      ) : series.length === 0 ? (
-        <p className="rounded-lg border border-mist bg-white p-6 text-center text-muted">Nothing to chart yet.</p>
       ) : (
-        <DeliveryChart
+        <DeliveryChartSection
+          key={`${range}-${metric}`}
           data={series}
-          grain={grain}
           title="Impressions and CTR"
+          range={range}
+          metric={metric}
         />
       )}
 

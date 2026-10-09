@@ -1,3 +1,5 @@
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+
 interface Column<T> {
   key: string;
   header: string;
@@ -17,7 +19,8 @@ interface DataTableProps<T> {
   getRowKey: (row: T, index: number) => string;
 }
 
-/** Standalone table card: one Mist frame, title with no divider, and the
+/** Standalone table card on the same white Card surface as the chart section
+ * (Cloud page ground, no enclosing border), title with no divider, and the
  * table sitting flush inside it — row dividers only, no nested bordered box.
  * Numbers get tabular figures and rows lift on hover so dense metrics scan. */
 export function DataTable<T>({
@@ -31,13 +34,17 @@ export function DataTable<T>({
   getRowKey,
 }: DataTableProps<T>) {
   return (
-    <section className="rounded-card border border-mist bg-white">
+    <Card>
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 px-5 pt-5 pb-2">
-          {title ? <h2 className="font-display font-semibold text-ink">{title}</h2> : <span />}
-          {action}
-        </header>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {title ? <CardTitle>{title}</CardTitle> : <span />}
+            {action}
+          </div>
+        </CardHeader>
       )}
+      {/* Flush on purpose: the table runs edge to edge so row dividers span the
+          whole card — CardContent's px-5 padding stay for state boxes only. */}
       <div className="pb-4">
         {loading ? (
           <div
@@ -87,6 +94,6 @@ export function DataTable<T>({
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
