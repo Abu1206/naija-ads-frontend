@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
-import { TopBar, type NavItem } from "./TopBar";
+import { Sidebar, type NavItem } from "./Sidebar";
 
 // Layouts declare their nav arrays against this type; re-exported so they do not
-// have to reach into TopBar.tsx for it.
+// have to reach into Sidebar.tsx for it.
 export type { NavItem };
 
 interface PageHeaderProps {
@@ -36,17 +36,17 @@ export function DashboardShell({
   section,
   items,
   children,
-  balance,
 }: {
   section: string;
   items: NavItem[];
   children: React.ReactNode;
-  balance?: string;
 }) {
   return (
-    <div className="min-h-screen bg-cloud">
-      <TopBar section={section} items={items} balance={balance} />
-      <div className="mx-auto min-w-0 max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</div>
+    <div className="min-h-screen bg-cloud md:flex">
+      <Sidebar section={section} items={items} />
+      <div className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </div>
     </div>
   );
 }

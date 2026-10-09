@@ -76,7 +76,7 @@ Ad type cards (banner, pop-up, rewarded video, audio) show a simple flat shape f
 
 Status badges are pills with a dot: pending review in gold tint, approved in green tint, rejected in red tint, flagged for fraud in Ink with white text.
 
-The top bar is Deep Forest with the wordmark in gold, nav links in white and pale green, and the wallet balance in gold on the right.
+Dashboard navigation lives in a Deep Forest sidebar: the wordmark in gold, nav links in white and pale green, the active section on a soft white wash. On phones the sidebar becomes a horizontal strip above the content. The wallet balance in gold lives in the wallet card and only there — never in the nav. Marketing pages carry the same Forest surface as a slim header with the same gold wordmark.
 
 ## Voice
 

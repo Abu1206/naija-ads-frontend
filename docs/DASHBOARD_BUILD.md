@@ -53,8 +53,8 @@ empty states, and navigation between them. Nothing renders mock data.
 | `/admin/fraud` | Fraud alerts by signal and severity |
 | `/admin/audit` | Audit log (read-only) |
 
-Shared pieces: `components/TopBar.tsx` (Deep Forest top bar + active-link nav), `DashboardShell.tsx`
-(top bar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
+Shared pieces: `components/Sidebar.tsx` (Deep Forest sidebar + active-link nav, horizontal strip
+on phones), `DashboardShell.tsx` (sidebar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
 `BarChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
 `Button.tsx` + `Field.tsx` (the one button set and the one field pattern every form uses),
 `Icon.tsx`, and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
