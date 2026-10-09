@@ -49,6 +49,32 @@ export function formatCount(value: number): string {
 }
 
 /**
+ * Chart period labels. Period strings arrive backend-owned ("2026-10" today,
+ * "2026-10-03" once the daily grain lands). Monthly labels shorten to "May";
+ * daily ones to "3 Oct" for axis duty. Pure and server-safe: it lives
+ * here (not in the client chart module) so server pages can map the backend
+ * series before rendering.
+ */
+export function deliveryLabel(period: string): string {
+  const daily = /^(\d{4})-(\d{2})-(\d{2})/.exec(period);
+  if (daily) {
+    const d = new Date(`${daily[1]}-${daily[2]}-${daily[3]}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-NG", { day: "numeric", month: "short" });
+    }
+    return period;
+  }
+  const monthly = /^(\d{4})-(\d{2})/.exec(period);
+  if (monthly) {
+    const d = new Date(`${monthly[1]}-${monthly[2]}-01T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-NG", { month: "short" });
+    }
+  }
+  return period;
+}
+
+/**
  * Form-input unit conversion only: an advertiser types naira, the API takes kobo.
  * This never derives spend, revenue or a balance — those arrive kobo-denominated
  * from the backend and are displayed, not computed (AGENTS.md §6.1).
