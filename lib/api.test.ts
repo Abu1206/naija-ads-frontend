@@ -1,6 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { apiFetch, apiUrl, load } from "./api";
 import { ApiError } from "./types";
+
+// These cover the *live* transport against the Go API. Mock mode swaps the
+// transport out, so it is pinned off here to keep the assertions about fetch,
+// credentials and error mapping meaningful. lib/mock/store.test.ts covers the
+// fixture path.
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_DATA_SOURCE", "live");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
 describe("apiUrl", () => {
   it("joins base and path", () => {
@@ -12,7 +25,6 @@ describe("apiFetch", () => {
   it("maps 401 to a login error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
     await expect(apiFetch("/api/v1/apps")).rejects.toMatchObject({ status: 401 });
-    vi.unstubAllGlobals();
   });
 
   it("maps 422 to field errors", async () => {
@@ -28,7 +40,6 @@ describe("apiFetch", () => {
     const err = await apiFetch("/api/v1/apps").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).fields).toEqual(fields);
-    vi.unstubAllGlobals();
   });
 
   it("maps an unreachable API to a readable error, not the browser's wording", async () => {
@@ -37,7 +48,6 @@ describe("apiFetch", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).status).toBe(0);
     expect((err as ApiError).message).toContain("NEXT_PUBLIC_API_BASE_URL");
-    vi.unstubAllGlobals();
   });
 
   it("sends cookies for httpOnly session auth", async () => {
@@ -50,7 +60,6 @@ describe("apiFetch", () => {
       expect.any(String),
       expect.objectContaining({ credentials: "include" }),
     );
-    vi.unstubAllGlobals();
   });
 });
 
@@ -64,7 +73,6 @@ describe("load", () => {
       data: [{ id: "c1" }],
       error: null,
     });
-    vi.unstubAllGlobals();
   });
 
   it("never throws: an API failure becomes an error string", async () => {
@@ -72,7 +80,6 @@ describe("load", () => {
     const result = await load("/api/v1/campaigns");
     expect(result.data).toBeNull();
     expect(result.error).toBe("Forbidden");
-    vi.unstubAllGlobals();
   });
 
   it("names the env var when the API is unreachable", async () => {
@@ -80,6 +87,5 @@ describe("load", () => {
     const result = await load("/api/v1/campaigns");
     expect(result.data).toBeNull();
     expect(result.error).toContain("NEXT_PUBLIC_API_BASE_URL");
-    vi.unstubAllGlobals();
   });
 });

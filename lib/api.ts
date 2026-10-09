@@ -3,11 +3,15 @@
 // (401 -> login, 422 -> field errors). No component fetches ad-hoc.
 
 import { ApiError, type FieldErrors } from "./types";
-
+import { isMock, mockFetch, mockRead } from "./mock";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 const UNREACHABLE_MESSAGE =
   "Could not reach the Naija Ads API. Check NEXT_PUBLIC_API_BASE_URL.";
+
+// Mock mode short-circuits the transport, not the call sites: pages keep the
+// same `load<T>(path)` / `apiFetch<T>(path)` signatures they use against the Go
+// server, so turning the backend on is an env change and nothing else.
 
 export function apiUrl(path: string): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
@@ -26,6 +30,8 @@ function isFieldErrors(value: unknown): value is FieldErrors {
 }
 
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
+  if (isMock()) return mockFetch<T>(path, options as RequestInit & { body?: unknown });
+
   const { body, headers, ...rest } = options;
   let res: Response;
   try {
@@ -80,6 +86,8 @@ export async function load<T>(
   path: string,
   options: ApiOptions = {},
 ): Promise<{ data: T | null; error: string | null }> {
+  if (isMock()) return { data: mockRead<T>(path), error: null };
+
   try {
     return { data: await apiFetch<T>(path, options), error: null };
   } catch (err) {
