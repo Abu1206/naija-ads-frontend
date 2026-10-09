@@ -56,7 +56,7 @@ Headings and money use Quicksand, at 600 or 700. Body, buttons, labels and form 
 | Body | DM Sans 400 | 16 / 24 |
 | Caption | DM Sans 700 | 13 |
 
-Two things to watch with Quicksand. It stops at bold and its strokes are thin, so never use it small or light. Use it for big, clear things only. And check that the ₦ symbol renders in Quicksand itself rather than a fallback font. If it doesn't, or if the whole thing feels too playful once real screens exist, Outfit and Plus Jakarta Sans are the backup picks because they come in heavier weights.
+Two things to watch with Quicksand. It stops at bold and its strokes are thin, so never use it small or light. Use it for big, clear things only. The ₦ glyph itself always sets in the DM Sans body stack (`<Naira>` splits it out in MetricCard and WalletCard) — that stack is the rendering path proven clean on-device, while neither primary font draws ₦ reliably alone. Both fonts still load `["latin", "latin-ext"]` so the primary faces cover it where present. If the whole thing ever feels too playful once real screens exist, Outfit and Plus Jakarta Sans are the backup picks because they come in heavier weights.
 
 Fewer fonts also means a faster first load, which matters for people on mobile data.
 

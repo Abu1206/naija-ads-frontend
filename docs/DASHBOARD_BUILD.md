@@ -57,7 +57,8 @@ Shared pieces: `components/Sidebar.tsx` (Deep Forest sidebar + active-link nav, 
 on phones), `DashboardShell.tsx` (sidebar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
 `BarChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
 `Button.tsx` + `Field.tsx` (the one button set and the one field pattern every form uses),
-`Icon.tsx`, and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
+`Icon.tsx` (the ONLY icon source — Hugeicons via `@hugeicons/react` +
+`@hugeicons/core-free-icons`; no other icon pack, no hand-rolled SVG paths), and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
 (reused for business profile, developer profile, app registration, placement creation, the payout
 account and both signup variants), `PayoutRequestForm`, `ReviewDecision`, `LoginForm`.
 

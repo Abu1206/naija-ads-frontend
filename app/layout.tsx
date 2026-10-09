@@ -4,16 +4,18 @@ import "./globals.css";
 
 // Two families only (design-system.md): Quicksand 600/700 for headings and
 // money, DM Sans for body/buttons/labels/fields. Few weights on purpose —
-// first load stays fast on mobile data.
+// first load stays fast on mobile data. latin-ext is non-negotiable: the
+// naira sign (U+20A6) lives in that subset, and latin-only renders it as a
+// stray dash on devices without a fallback glyph.
 const quicksand = Quicksand({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   weight: ["600", "700"],
   variable: "--font-quicksand",
   display: "swap",
 });
 
 const dmSans = DM_Sans({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "700"],
   variable: "--font-dm-sans",
   display: "swap",
