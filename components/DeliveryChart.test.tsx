@@ -58,11 +58,13 @@ describe("DeliveryChart", () => {
     expect(screen.getByText("2M")).toBeInTheDocument();
   });
 
-  it("hints touch users in the header instead of a footer", () => {
+  it("gives touch users the Clicks tab instead of a header hint", () => {
     const { container } = render(<DeliveryChart data={data} title="Delivery" />);
-    expect(screen.getByText("Tap a point for clicks")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Clicks" })).toBeInTheDocument();
+    expect(screen.queryByText(/Tap a point/)).toBeNull();
     expect(container.querySelector('[data-slot="card-footer"]')).toBeNull();
   });
+  it("summarises CTR in the accessible label so the line is not colour-only", () => {
     const { container } = render(<DeliveryChart data={data} title="Delivery" />);
     const figure = container.querySelector("figure");
     expect(figure?.getAttribute("aria-label")).toMatch(/2\.32% CTR/);
@@ -125,5 +127,54 @@ describe("deliveryLabel", () => {
 
   it("shortens daily periods for axis duty", () => {
     expect(deliveryLabel("2026-10-03")).toContain("Oct");
+  });
+});
+
+describe("DeliveryChart controls", () => {
+  const monthly = [
+    { label: "May", impressions: 612000, clicks: 14200 },
+    { label: "Jun", impressions: 748000, clicks: 18100 },
+    { label: "Jul", impressions: 1104000, clicks: 28400 },
+    { label: "Aug", impressions: 1320000, clicks: 34800 },
+    { label: "Sep", impressions: 1680000, clicks: 43200 },
+    { label: "Oct", impressions: 1842000, clicks: 46100 },
+  ];
+
+  it("states the series extent on the range control so growth reads as delivery, not sample data", () => {
+    render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
+    expect(screen.getByRole("button", { name: "All (6)" })).toBeInTheDocument();
+  });
+
+  it("filters monthly series to the last 3 periods", () => {
+    const { container } = render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
+    fireEvent.click(screen.getByRole("button", { name: "Last 3" }));
+    const summary = container.querySelector("figure")?.getAttribute("aria-label") ?? "";
+    expect(summary).toContain("Oct");
+    expect(summary).toContain("Aug");
+    expect(summary).not.toContain("May");
+    expect(screen.getByRole("button", { name: "Last 3" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("switches the desktop metric without touching the mobile tabs", () => {
+    render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
+    const clicks = screen.getByRole("button", { name: "Clicks" });
+    expect(clicks).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(clicks);
+    expect(clicks).toHaveAttribute("aria-pressed", "true");
+    // Mobile tablist is untouched: still three tabs, Impressions selected.
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+    expect(screen.getByRole("tab", { name: "Impressions" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("offers day windows for daily series", () => {
+    const daily = Array.from({ length: 40 }, (_, i) => ({
+      label: `d${String(i + 1).padStart(2, "0")}`,
+      impressions: 10000 + i * 100,
+      clicks: 200 + i * 2,
+    }));
+    render(<DeliveryChart data={daily} title="Delivery" grain="daily" />);
+    expect(screen.getByRole("button", { name: "7D" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "30D" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All (40)" })).toBeInTheDocument();
   });
 });

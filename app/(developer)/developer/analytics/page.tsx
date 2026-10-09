@@ -77,7 +77,6 @@ export default async function DeveloperAnalyticsPage() {
         <DeliveryChart
           data={series}
           title="Delivery"
-          description="Views and click-through rate across every app you monetize."
         />
       )}
 
@@ -112,8 +111,8 @@ export default async function DeveloperAnalyticsPage() {
           },
           { key: "period", header: "Period", render: (e) => e.period },
           { key: "ad_type", header: "Format", render: (e) => e.ad_type },
-          { key: "impressions", header: "Impressions", render: (e) => formatCount(e.impressions) },
-          { key: "revenue", header: "Revenue", render: (e) => formatKobo(e.revenue_kobo) },
+          { key: "impressions", header: "Impressions", numeric: true, render: (e) => formatCount(e.impressions) },
+          { key: "revenue", header: "Revenue", numeric: true, render: (e) => formatKobo(e.revenue_kobo) },
         ]}
         rows={earnings.data ?? []}
         error={earnings.error}

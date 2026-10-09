@@ -94,8 +94,8 @@ Green is the brand and stays **actionable**: buttons, links, focus rings, chart 
 badges (`StatusBadge` pairs every colour with text + a dot, so meaning never depends on colour
 alone). Gold marks money and results — gold numerals on Deep Forest metric cards
 (`MetricCard tone="money"`), gold balances on wallet cards, gold fill with Ink text on
-light, and the Matte Gold CTR line on `DeliveryChart` (body copy about CTR stays pine
-for contrast; the gold is the series colour only). Metric tiles are Forest throughout: white numerals for counts/rates, gold for cash,
+light, and the deeper chart-only CTR gold (#A87A1F, clears 3:1 on white —
+body copy about CTR stays pine for contrast; the gold is the series colour only). Metric tiles are Forest throughout: white numerals for counts/rates, gold for cash,
 mint labels, ember error text. Red is rare: if it shows up, someone needs to look at it.
 
 ## 3. How it connects to the backend
