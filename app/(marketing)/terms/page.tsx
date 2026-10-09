@@ -27,11 +27,11 @@ const SECTIONS = [
 export default function TermsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-3xl font-bold">Terms</h1>
+      <h1 className="font-display text-3xl font-bold text-ink">Terms</h1>
       {SECTIONS.map((s) => (
         <section key={s.title} className="space-y-2">
-          <h2 className="text-xl font-bold">{s.title}</h2>
-          <p className="text-sm text-gray-600">{s.body}</p>
+          <h2 className="font-display text-xl font-bold text-ink">{s.title}</h2>
+          <p className="text-sm text-muted">{s.body}</p>
         </section>
       ))}
     </div>
