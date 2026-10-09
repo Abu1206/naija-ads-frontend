@@ -4,12 +4,18 @@
  * is the one rendering path proven to draw ₦ cleanly on-device; neither
  * display nor body primary font can be trusted with it alone. Non-naira
  * strings pass through untouched, so callers never branch.
+ *
+ * The symbol sets smaller and lighter than the digits with its own breathing
+ * room: at full display size and weight the ₦ double-bar reads as a
+ * strikethrough across the amount instead of a currency marker. The `mr`
+ * also defeats the parent's `tracking-tight`, which would otherwise pull the
+ * bars onto the first digit.
  */
 export function Naira({ value }: { value: string }) {
   if (!value.startsWith("₦")) return <>{value}</>;
   return (
     <>
-      <span className="font-sans">₦</span>
+      <span className="mr-[0.1em] font-sans text-[0.82em] font-medium tracking-normal">₦</span>
       {value.slice(1)}
     </>
   );
