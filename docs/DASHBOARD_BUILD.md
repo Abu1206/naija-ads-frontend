@@ -53,27 +53,43 @@ empty states, and navigation between them. Nothing renders mock data.
 | `/admin/fraud` | Fraud alerts by signal and severity |
 | `/admin/audit` | Audit log (read-only) |
 
-Shared pieces: `components/Sidebar.tsx` (active-link nav), `DashboardShell.tsx` (sidebar + page
-header + green CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`, `BarChart.tsx`,
+Shared pieces: `components/TopBar.tsx` (Deep Forest top bar + active-link nav), `DashboardShell.tsx`
+(top bar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
+`BarChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
+`Button.tsx` + `Field.tsx` (the one button set and the one field pattern every form uses),
 `Icon.tsx`, and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
 (reused for business profile, developer profile, app registration, placement creation, the payout
 account and both signup variants), `PayoutRequestForm`, `ReviewDecision`, `LoginForm`.
 
 ## 2. Look and feel
 
-White surfaces, gray page background, one accent. `app/globals.css` defines the brand tokens:
+Source of truth is **`docs/design-system.md`**; the live tokens are `app/globals.css` (`@theme`):
 
 ```css
 @theme {
-  --color-brand: #38b000;
-  --color-brand-strong: #2e9100;
+  --color-naija: #008751;   /* primary buttons, links, focus rings */
+  --color-pine: #006b40;    /* green text on light (passes contrast) */
+  --color-forest: #072b1c;  /* top bar, wallet card, dark surfaces */
+  --color-gold: #cfa24a;    /* money only: balances, Fund/Withdraw */
+  --color-alert: #c62828;   /* rare on purpose: rejections, fraud */
+  --color-cloud: #f4f7f1;   /* app background */
+  --color-ink: #0c2216;     /* body text */
+  --color-muted: #4d6054;   /* helper text, captions */
+  --color-mist: #d9e2d6;    /* borders and dividers */
+  --color-mint: #e3f1e8;    /* approved badge, icon tiles */
+  --color-sand: #f3ead2;    /* pending badge */
+  --color-blush: #fbe3e3;   /* rejected badge, error panels */
 }
 ```
 
-Green is restricted to **buttons, icons and chart series** — never a background, never a page
-canvas. Where green marks a status it is used at 10% opacity with the darker `brand-strong` text
-(`StatusBadge`), and every badge pairs colour with text so meaning never depends on colour alone.
-Charts use brand green for the primary series and gray for the comparison series.
+Headings and money set in Quicksand (`font-display`), body/buttons/labels/fields in DM Sans
+(`font-sans`) — both loaded via `next/font` in `app/layout.tsx`. Radius: 8 buttons/inputs
+(`rounded-lg`), 14 cards (`rounded-card`), 20 wallet (`rounded-wallet`), pill badges.
+
+Green is the brand and stays **actionable**: buttons, links, focus rings, chart series, approved
+badges (`StatusBadge` pairs every colour with text + a dot, so meaning never depends on colour
+alone). Gold appears only next to money — gold text on Deep Forest, gold fill with Ink text on
+light. Red is rare: if it shows up, someone needs to look at it.
 
 ## 3. How it connects to the backend
 

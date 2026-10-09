@@ -1,8 +1,45 @@
 @import "tailwindcss";
 
-/* Brand green is restricted to buttons, icons and chart series. Surfaces stay
-   white/gray so the accent keeps its meaning as "actionable". */
+/* Naija Ads design tokens (docs/design-system.md).
+   Green is the brand, Deep Forest the dark surface, Gold is money-only,
+   Red is rare on purpose. Neutrals carry a slight green tint so nothing clashes.
+   Flat and bordered: 1px Mist borders, almost no shadows, no gradients. */
 @theme {
-  --color-brand: #38b000;
-  --color-brand-strong: #2e9100;
+  --color-naija: #008751;
+  --color-pine: #006b40;
+  --color-forest: #072b1c;
+  --color-gold: #cfa24a;
+  --color-alert: #c62828;
+  --color-cloud: #f4f7f1;
+  --color-ink: #0c2216;
+  --color-muted: #4d6054;
+  --color-mist: #d9e2d6;
+  --color-mint: #e3f1e8;
+  --color-sand: #f3ead2;
+  --color-blush: #fbe3e3;
+
+  /* Back-compat aliases while pages migrate off the old names. New code uses
+     naija/pine directly. */
+  --color-brand: #008751;
+  --color-brand-strong: #006b40;
+
+  /* Loaded via next/font in app/layout.tsx. The vars hold the @font-face
+     stacks; the fallbacks keep type readable on slow networks before fonts
+     arrive (matters on mobile data). */
+  --font-display: var(--font-quicksand), "Quicksand", "DM Sans", system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Shape: 8 for buttons/inputs (rounded-lg), 14 for cards, 20 for wallet. */
+  --radius-card: 14px;
+  --radius-wallet: 20px;
+}
+
+@layer base {
+  body {
+    @apply bg-cloud font-sans text-ink antialiased;
+  }
+
+  ::selection {
+    background: var(--color-mint);
+  }
 }
