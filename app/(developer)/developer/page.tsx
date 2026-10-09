@@ -55,18 +55,18 @@ export default async function DeveloperOverviewPage() {
         />
       </div>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Revenue by format</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Revenue by format</h2>
         <dl className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {AD_TYPES.map((format) => (
-            <div key={format} className="rounded-lg border p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500 capitalize">
+            <div key={format} className="rounded-lg border border-mist p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted capitalize">
                 {format}
               </dt>
               <dd className="mt-1 text-xl font-semibold">
                 {formats[format] ? formatKobo(formats[format]!.revenue_kobo) : "—"}
               </dd>
-              <dd className="text-xs text-gray-500">
+              <dd className="text-xs text-muted">
                 {formats[format] ? `${formatCount(formats[format]!.impressions)} impressions` : "No data"}
               </dd>
             </div>
@@ -88,7 +88,7 @@ export default async function DeveloperOverviewPage() {
           icon="payouts"
         />
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         Pending vs available is an aggregate the API surface (spec §23) does not expose yet — it is
         deliberately blank rather than summed in the browser.
       </p>
@@ -111,7 +111,7 @@ export default async function DeveloperOverviewPage() {
       <DataTable<Payout>
         title="Payouts"
         action={
-          <a href="/developer/payouts" className="text-sm font-medium text-brand-strong hover:underline">
+          <a href="/developer/payouts" className="text-sm font-medium text-pine hover:underline">
             View all
           </a>
         }

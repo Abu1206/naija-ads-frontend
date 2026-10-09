@@ -30,8 +30,8 @@ export default async function PayoutsPage() {
       <PageHeader title="Payouts" subtitle="Request a withdrawal and track it through review." />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 font-semibold">Payout account</h2>
+        <section className="rounded-card border border-mist bg-white p-6">
+          <h2 className="mb-4 font-display font-semibold text-ink">Payout account</h2>
           <ProfileForm
             endpoint={payoutEndpoints.account}
             fields={accountFields}
@@ -40,10 +40,10 @@ export default async function PayoutsPage() {
           />
         </section>
 
-        <section className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 font-semibold">Request a payout</h2>
+        <section className="rounded-card border border-mist bg-white p-6">
+          <h2 className="mb-4 font-display font-semibold text-ink">Request a payout</h2>
           <PayoutRequestForm />
-          <p className="mt-4 text-xs text-gray-500">
+          <p className="mt-4 text-xs text-muted">
             Requests enter admin review before any transfer. The backend decides whether the amount
             clears your available balance — this dashboard never checks it.
           </p>

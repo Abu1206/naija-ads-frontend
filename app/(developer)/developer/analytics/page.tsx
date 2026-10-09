@@ -65,14 +65,14 @@ export default async function DeveloperAnalyticsPage() {
         />
       </div>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Delivery</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Delivery</h2>
         {analytics.error ? (
-          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+          <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
             {analytics.error}
           </p>
         ) : series.length === 0 ? (
-          <p className="rounded-lg border p-6 text-center text-gray-500">
+          <p className="rounded-lg border border-mist p-6 text-center text-muted">
             No delivery yet. Fill data appears once the SDK serves its first ad.
           </p>
         ) : (
@@ -85,18 +85,18 @@ export default async function DeveloperAnalyticsPage() {
         )}
       </section>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Revenue by format</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Revenue by format</h2>
         <dl className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {AD_TYPES.map((format) => (
-            <div key={format} className="rounded-lg border p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500 capitalize">
+            <div key={format} className="rounded-lg border border-mist p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted capitalize">
                 {format}
               </dt>
               <dd className="mt-1 text-xl font-semibold">
                 {formats[format] ? formatKobo(formats[format]!.revenue_kobo) : "—"}
               </dd>
-              <dd className="text-xs text-gray-500">
+              <dd className="text-xs text-muted">
                 {formats[format]
                   ? `${formatCount(formats[format]!.impressions)} impressions`
                   : "No data"}

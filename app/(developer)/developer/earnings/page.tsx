@@ -54,13 +54,13 @@ export default async function EarningsPage() {
         />
       </div>
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Earnings status</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Earnings status</h2>
         <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {LADDER.map((status) => (
-            <li key={status} className="rounded-lg border p-3">
+            <li key={status} className="rounded-lg border border-mist p-3">
               <StatusBadge status={status} />
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-muted">
                 {rows.length === 0
                   ? "No records"
                   : `${formatCount(rows.filter((e) => e.status === status).length)} row(s)`}
@@ -68,7 +68,7 @@ export default async function EarningsPage() {
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-gray-500">
+        <p className="mt-3 text-xs text-muted">
           Counts group the rows this page already has. Amounts per stage come from the backend.
         </p>
       </section>
