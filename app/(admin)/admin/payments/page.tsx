@@ -36,12 +36,14 @@ export default async function AdminPaymentsPage() {
           label="Advertiser spend"
           value={demand.data ? formatKobo(demand.data.spend_kobo) : "—"}
           icon="billing"
+          tone="money"
           error={demand.error}
         />
         <MetricCard
           label="Developer earnings"
           value={supply.data ? formatKobo(supply.data.revenue_kobo) : "—"}
           icon="earnings"
+          tone="money"
           error={supply.error}
         />
       </div>

@@ -45,6 +45,7 @@ export default async function DeveloperOverviewPage() {
           label="Estimated revenue"
           value={summary ? formatKobo(summary.revenue_kobo) : "—"}
           icon="earnings"
+          tone="money"
           error={analytics.error}
         />
         <MetricCard

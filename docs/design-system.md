@@ -72,11 +72,13 @@ Inputs are 48 high with the label above, never as a placeholder, and a short hel
 
 The wallet card is Deep Forest with a small caps label, the balance in gold, and the main action below it. It is the most recognisable object in the product.
 
+Metric tiles are Deep Forest too: white numerals for counts and rates, gold numerals for cash, labels in pale green, icons in a white wash. Errors on dark surfaces use a lightened red that still passes contrast.
+
 Ad type cards (banner, pop-up, rewarded video, audio) show a simple flat shape for each format, the name, and the minimum CPM. The real minimum prices come from admin settings, so the design shows a placeholder until they're set.
 
 Status badges are pills with a dot: pending review in gold tint, approved in green tint, rejected in red tint, flagged for fraud in Ink with white text.
 
-Dashboard navigation lives in a Deep Forest sidebar: the wordmark in gold, nav links in white and pale green, the active section on a soft white wash. On phones the sidebar becomes a horizontal strip above the content. The wallet balance in gold lives in the wallet card and only there — never in the nav. Marketing pages carry the same Forest surface as a slim header with the same gold wordmark.
+Dashboard navigation blends into the app background (Cloud), separated from the content by a Mist border: the wordmark in ink with green, a collapse toggle beside it, nav links in muted with the active item in pine plus a thin green bar at the rail's rim. No pills, no captions. On phones the sidebar becomes a horizontal strip above the content. Gold lives in the wallet card and on cash metric numerals — never in the nav. Marketing pages carry the same Forest surface as a slim header with the same gold wordmark.
 
 ## Voice
 

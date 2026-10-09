@@ -57,6 +57,7 @@ export default async function BusinessOverviewPage() {
           value={summary ? formatKobo(summary.spend_kobo) : "—"}
           hint={summary ? `${formatKobo(summary.remaining_budget_kobo)} left` : undefined}
           icon="billing"
+          tone="money"
           error={analytics.error}
         />
       </div>

@@ -38,6 +38,7 @@ export default async function BillingPage() {
           label="Total spend"
           value={analytics.data ? formatKobo(analytics.data.spend_kobo) : "—"}
           icon="campaigns"
+          tone="money"
           error={analytics.error}
         />
       </div>

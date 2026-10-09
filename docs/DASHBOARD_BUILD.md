@@ -70,9 +70,10 @@ Source of truth is **`docs/design-system.md`**; the live tokens are `app/globals
 @theme {
   --color-naija: #008751;   /* primary buttons, links, focus rings */
   --color-pine: #006b40;    /* green text on light (passes contrast) */
-  --color-forest: #072b1c;  /* top bar, wallet card, dark surfaces */
-  --color-gold: #cfa24a;    /* money only: balances, Fund/Withdraw */
-  --color-alert: #c62828;   /* rare on purpose: rejections, fraud */
+  --color-forest: #072b1c;  /* sidebar blend (as Cloud), wallet + metric cards */
+  --color-gold: #cfa24a;    /* money only: metric numerals (tone="money"), balances, Fund/Withdraw */
+  --color-alert: #c62828;   /* rare on purpose: rejections, fraud (on light) */
+  --color-ember: #f0a8a8;   /* alert text on Forest (passes contrast on dark) */
   --color-cloud: #f4f7f1;   /* app background */
   --color-ink: #0c2216;     /* body text */
   --color-muted: #4d6054;   /* helper text, captions */
@@ -87,10 +88,13 @@ Headings and money set in Quicksand (`font-display`), body/buttons/labels/fields
 (`font-sans`) — both loaded via `next/font` in `app/layout.tsx`. Radius: 8 buttons/inputs
 (`rounded-lg`), 14 cards (`rounded-card`), 20 wallet (`rounded-wallet`), pill badges.
 
-Green is the brand and stays **actionable**: buttons, links, focus rings, chart series, approved
+Green is the brand and stays **actionable**: buttons, links, focus rings, chart bars, approved
 badges (`StatusBadge` pairs every colour with text + a dot, so meaning never depends on colour
-alone). Gold appears only next to money — gold text on Deep Forest, gold fill with Ink text on
-light. Red is rare: if it shows up, someone needs to look at it.
+alone). Gold marks money and results — gold numerals on Deep Forest metric cards
+(`MetricCard tone="money"`), gold balances on wallet cards, gold fill with Ink text on
+light, and the Matte Gold CTR line on `DeliveryChart` (body copy about CTR stays pine
+for contrast; the gold is the series colour only). Metric tiles are Forest throughout: white numerals for counts/rates, gold for cash,
+mint labels, ember error text. Red is rare: if it shows up, someone needs to look at it.
 
 ## 3. How it connects to the backend
 

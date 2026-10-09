@@ -42,6 +42,7 @@ export default async function EarningsPage() {
           label="Estimated revenue"
           value={analytics.data ? formatKobo(analytics.data.revenue_kobo) : "—"}
           icon="earnings"
+          tone="money"
           error={analytics.error}
         />
         <MetricCard label="Pending earnings" value="—" hint="needs a backend total" icon="overview" />

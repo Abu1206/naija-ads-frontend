@@ -28,7 +28,7 @@ export default async function BusinessAnalyticsPage() {
         <MetricCard label="Impressions" value={summary ? formatCount(summary.impressions) : "—"} icon="analytics" error={error} />
         <MetricCard label="Clicks" value={summary ? formatCount(summary.clicks) : "—"} icon="campaigns" error={error} />
         <MetricCard label="CTR" value={summary ? formatCTR(summary.clicks, summary.impressions) : "—"} icon="overview" error={error} />
-        <MetricCard label="Spend" value={summary ? formatKobo(summary.spend_kobo) : "—"} icon="billing" error={error} />
+        <MetricCard label="Spend" value={summary ? formatKobo(summary.spend_kobo) : "—"} icon="billing" tone="money" error={error} />
       </div>
 
       <section className="rounded-card border border-mist bg-white p-5">
