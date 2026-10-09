@@ -198,3 +198,35 @@ These are deliberate blanks, not oversights:
    missing that call. Needs the real order from the backend.
 10. **`middleware.ts` reads a plain role string** from `naija_ads_session` (see gap 4), so
     `/login`'s redirect to `/` only lands on a dashboard once the backend issues a real session.
+
+## 7. Mock data layer (ADR 0003)
+
+The Go API is not deployed, so the app runs against fixtures. `NEXT_PUBLIC_DATA_SOURCE`
+(default `mock`) picks the transport; `live` calls the real server.
+
+| Concern | Where |
+| --- | --- |
+| Fixture dataset | `lib/mock/data.ts` — typed against `lib/types.ts` |
+| Read resolution + writes | `lib/mock/store.ts` |
+| The switch | `isMock()` in `lib/mock/index.ts`, consulted by `lib/api.ts` |
+| Browser writes | `app/api/dev/[...path]/route.ts` (POST/PUT) |
+| Session for styling | `lib/mock/actions.ts` + `components/DevSession.tsx` |
+| Role switcher | the dashed "Dev only" panel on `/login` and `/403` |
+
+**No page, component or form changed.** Both `load()` and `apiFetch()` still take the same
+paths, so the fixture layer sits behind the same seam the Go client uses and switching over
+is an env var, not a refactor.
+
+**Teardown when the backend ships** (do all three, in order):
+
+1. Set `NEXT_PUBLIC_DATA_SOURCE=live`.
+2. Delete `components/DevSession.tsx` and the `app/api/dev/**` route.
+3. Delete `lib/mock/**` and both `isMock()` branches in `lib/api.ts`.
+
+After step 3, AGENTS.md §6.6 (no mock data) applies in full and unchanged.
+
+**Known limit.** The fixtures prove nothing about the contract. Every `*_kobo` value is a
+literal a human typed, so a wrong field name or unit in `lib/types.ts` renders fine here and
+only fails against the Go server. The first live request is still the first real test of the
+contract mirror — the open gaps in §6, especially gap 4 (the session cookie) and gap 8 (login
+response shape), are not closed by this.
