@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  budgetUtilization,
   formatCTR,
   formatCount,
   formatDate,
+  formatDelta,
   formatECPM,
   formatFillRate,
   formatKobo,
+  formatShare,
+  formatUtilization,
   nairaInputToKobo,
+  percentChange,
 } from "./format";
 
 describe("formatKobo", () => {
@@ -73,5 +78,51 @@ describe("nairaInputToKobo", () => {
 
   it("rounds to whole kobo instead of sending a float", () => {
     expect(nairaInputToKobo(10.005)).toBe(1001);
+  });
+});
+
+describe("percentChange", () => {
+  it("computes relative change", () => {
+    expect(percentChange(110, 100)).toBeCloseTo(0.1);
+    expect(percentChange(90, 100)).toBeCloseTo(-0.1);
+  });
+
+  it("returns null with no baseline instead of inventing a lift", () => {
+    expect(percentChange(100, 0)).toBeNull();
+    expect(percentChange(0, 0)).toBeNull();
+  });
+});
+
+describe("formatDelta", () => {
+  it("formats an uplift with one decimal", () => {
+    expect(formatDelta(1842000, 1680000)).toEqual({ text: "↑ 9.6%", direction: "up" });
+  });
+
+  it("formats a decline", () => {
+    expect(formatDelta(43200, 46100)?.direction).toBe("down");
+  });
+
+  it("returns null with no baseline", () => {
+    expect(formatDelta(100, 0)).toBeNull();
+  });
+});
+
+describe("budgetUtilization", () => {
+  it("returns the spend share of the total budget", () => {
+    expect(budgetUtilization(87320000, 1106500000)).toBeCloseTo(0.0732, 3);
+  });
+
+  it("returns null when there is no budget", () => {
+    expect(budgetUtilization(0, 0)).toBeNull();
+  });
+
+  it("formats as a used percentage", () => {
+    expect(formatUtilization(87320000, 1106500000)).toBe("7.3% used");
+    expect(formatUtilization(0, 0)).toBe("—");
+  });
+
+  it("formats a bare share for inline use", () => {
+    expect(formatShare(0.07316)).toBe("7.3%");
+    expect(formatShare(null)).toBe("—");
   });
 });

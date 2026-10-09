@@ -48,6 +48,65 @@ export function formatCount(value: number): string {
   return new Intl.NumberFormat("en-NG").format(value);
 }
 
+export type DeltaDirection = "up" | "down" | "flat";
+
+export interface Delta {
+  text: string;
+  direction: DeltaDirection;
+}
+
+/**
+ * Relative change of `current` against `previous`. Null when there is no
+ * baseline (previous <= 0) — callers render no comparison rather than a
+ * misleading 0% or infinite lift.
+ */
+export function percentChange(current: number, previous: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) {
+    return null;
+  }
+  return (current - previous) / previous;
+}
+
+/**
+ * Compact "↑ 9.6%" comparison for KPI cards. Counts and ratios only — never
+ * money: spend context comes from backend-computed kobo amounts plus the
+ * display-only utilization bar below, not from a derived delta.
+ */
+export function formatDelta(current: number, previous: number): Delta | null {
+  const change = percentChange(current, previous);
+  if (change === null) return null;
+  const magnitude = `${(Math.abs(change) * 100).toFixed(1)}%`;
+  if (Math.abs(change) < 0.0005) return { text: `→ ${magnitude}`, direction: "flat" };
+  return change > 0
+    ? { text: `↑ ${magnitude}`, direction: "up" }
+    : { text: `↓ ${magnitude}`, direction: "down" };
+}
+
+/**
+ * Display-only budget share for the utilization bar. The kobo amounts stay
+ * backend-computed (AGENTS.md §6.1) — this derives no money value, only the
+ * 0..1 fill fraction. Null when there is no budget to split.
+ */
+export function budgetUtilization(spendKobo: number, remainingKobo: number): number | null {
+  if (!Number.isFinite(spendKobo) || !Number.isFinite(remainingKobo)) return null;
+  if (spendKobo < 0 || remainingKobo < 0) return null;
+  const total = spendKobo + remainingKobo;
+  if (total <= 0) return null;
+  return spendKobo / total;
+}
+
+/** 0.073 -> "7.3% used". No budget -> "—". */
+export function formatUtilization(spendKobo: number, remainingKobo: number): string {
+  const share = budgetUtilization(spendKobo, remainingKobo);
+  return share === null ? "—" : `${formatShare(share)} used`;
+}
+
+/** Display-only share for inline use next to a bar. Null -> "—". */
+export function formatShare(share: number | null): string {
+  if (share === null || !Number.isFinite(share)) return "—";
+  return `${(share * 100).toFixed(1)}%`;
+}
+
 /**
  * Chart period labels. Period strings arrive backend-owned ("2026-10" today,
  * "2026-10-03" once the daily grain lands). Monthly labels shorten to "May";
