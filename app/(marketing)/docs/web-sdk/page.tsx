@@ -9,15 +9,15 @@ export const metadata: Metadata = {
 export default function WebSdkPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Web SDK</h1>
-      <p className="max-w-2xl text-gray-600">
+      <h1 className="font-display text-3xl font-bold text-ink">Web SDK</h1>
+      <p className="max-w-2xl text-muted">
         The SDK sends identity and context; the server decides the winner, the price, and the
         reward. Never trust client-computed money.
       </p>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-bold">1. Request an ad</h2>
-        <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm text-gray-100">
+        <h2 className="font-display text-xl font-bold text-ink">1. Request an ad</h2>
+        <pre className="overflow-x-auto rounded-lg bg-forest p-4 text-sm text-mint">
 {`POST /v1/ads/request
 {
   "app_id": "...",
@@ -33,7 +33,7 @@ export default function WebSdkPage() {
   }
 }`}
         </pre>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           <code>ad_type</code> is one of <code>banner</code>, <code>interstitial</code>,{" "}
           <code>rewarded</code>, <code>audio</code>. The response carries the creative URL and a{" "}
           <code>click_url</code> bound to the served impression — open the served URL, never build
@@ -42,14 +42,14 @@ export default function WebSdkPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-bold">2. Report events in order</h2>
-        <pre className="overflow-x-auto rounded bg-gray-900 p-4 text-sm text-gray-100">
+        <h2 className="font-display text-xl font-bold text-ink">2. Report events in order</h2>
+        <pre className="overflow-x-auto rounded-lg bg-forest p-4 text-sm text-mint">
 {`POST /v1/ads/events
 { "event_type": "IMPRESSION", ... }
 { "event_type": "CLICK", "ad_impression_id": "...", ... }
 { "event_type": "REWARD_CONFIRMED", ... }  // rewarded only, after server validation`}
         </pre>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           A click must reference its served impression or it is rejected. Rewarded completion is
           confirmed server-side — <code>video_completed</code> is not a reward until the backend
           says so.
@@ -57,8 +57,8 @@ export default function WebSdkPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xl font-bold">3. Ship with test mode first</h2>
-        <p className="text-sm text-gray-600">
+        <h2 className="font-display text-xl font-bold text-ink">3. Ship with test mode first</h2>
+        <p className="text-sm text-muted">
           Develop with <code>mode: &quot;test&quot;</code> (see{" "}
           <Link href="/docs/test-mode" className="underline">
             test mode
