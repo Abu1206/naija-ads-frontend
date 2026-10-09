@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { BarChart, type SeriesPoint } from "@/components/BarChart";
+import { DeliveryChart, type DeliveryPoint, deliveryLabel } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
@@ -11,11 +11,11 @@ import { AD_TYPES } from "@/lib/types";
 export default async function BusinessAnalyticsPage() {
   const { data: summary, error } = await load<AnalyticsSummary>(analyticsFor("business"));
 
-  const series: SeriesPoint[] =
+  const series: DeliveryPoint[] =
     summary?.series.map((point) => ({
-      label: point.period.slice(0, 7),
-      primary: point.impressions,
-      secondary: point.clicks,
+      label: deliveryLabel(point.period),
+      impressions: point.impressions,
+      clicks: point.clicks,
     })) ?? [];
 
   const formats = summary?.by_format ?? {};
@@ -32,7 +32,7 @@ export default async function BusinessAnalyticsPage() {
       </div>
 
       <section className="rounded-card border border-mist bg-white p-5">
-        <h2 className="mb-4 font-display font-semibold text-ink">Impressions and clicks</h2>
+        <h2 className="mb-4 font-display font-semibold text-ink">Impressions and CTR</h2>
         {error ? (
           <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-6 text-center text-alert">
             {error}
@@ -40,7 +40,7 @@ export default async function BusinessAnalyticsPage() {
         ) : series.length === 0 ? (
           <p className="rounded-lg border border-mist p-6 text-center text-muted">Nothing to chart yet.</p>
         ) : (
-          <BarChart data={series} primaryLabel="Impressions" secondaryLabel="Clicks" ariaLabel="Delivery over time" />
+          <DeliveryChart data={series} ariaLabel="Delivery over time" />
         )}
       </section>
 

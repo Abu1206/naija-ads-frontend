@@ -53,9 +53,9 @@ empty states, and navigation between them. Nothing renders mock data.
 | `/admin/fraud` | Fraud alerts by signal and severity |
 | `/admin/audit` | Audit log (read-only) |
 
-Shared pieces: `components/Sidebar.tsx` (Deep Forest sidebar + active-link nav, horizontal strip
-on phones), `DashboardShell.tsx` (sidebar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
-`BarChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
+Shared pieces: `components/Sidebar.tsx` (rail blended into app bg + Mist border, pine active item + spring-glide rim bar,
+gliding neutral hover wash, staggered collapse choreography, horizontal strip on phones — motion language adapted from Animate UI's radix sidebar), `DashboardShell.tsx` (sidebar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
+`DeliveryChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
 `Button.tsx` + `Field.tsx` (the one button set and the one field pattern every form uses),
 `Icon.tsx` (the ONLY icon source — Hugeicons via `@hugeicons/react` +
 `@hugeicons/core-free-icons`; no other icon pack, no hand-rolled SVG paths), and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`

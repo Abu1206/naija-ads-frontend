@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/DashboardShell";
-import { BarChart, type SeriesPoint } from "@/components/BarChart";
+import { DeliveryChart, type DeliveryPoint, deliveryLabel } from "@/components/DeliveryChart";
 import { DataTable } from "@/components/DataTable";
 import { MetricCard } from "@/components/MetricCard";
 import { load } from "@/lib/api";
@@ -24,11 +24,11 @@ export default async function DeveloperAnalyticsPage() {
   const summary = analytics.data;
   const formats = summary?.by_format ?? {};
   const appNames = new Map((apps.data ?? []).map((a) => [a.app_id, a.name]));
-  const series: SeriesPoint[] =
+  const series: DeliveryPoint[] =
     summary?.series.map((point) => ({
-      label: point.period.slice(0, 7),
-      primary: point.impressions,
-      secondary: point.clicks,
+      label: deliveryLabel(point.period),
+      impressions: point.impressions,
+      clicks: point.clicks,
     })) ?? [];
 
   return (
@@ -76,12 +76,7 @@ export default async function DeveloperAnalyticsPage() {
             No delivery yet. Fill data appears once the SDK serves its first ad.
           </p>
         ) : (
-          <BarChart
-            data={series}
-            primaryLabel="Impressions"
-            secondaryLabel="Clicks"
-            ariaLabel="Impressions and clicks by period"
-          />
+          <DeliveryChart data={series} ariaLabel="Impressions and CTR by period" />
         )}
       </section>
 
