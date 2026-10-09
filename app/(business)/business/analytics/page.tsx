@@ -1,9 +1,11 @@
 import { PageHeader } from "@/components/DashboardShell";
 import { DeliveryChart, type DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
+import { SpendFooter } from "@/components/SpendFooter";
 import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
+import { detectGrain, seriesDeltas } from "@/lib/insights";
 import type { AnalyticsSummary } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -11,12 +13,16 @@ import { AD_TYPES } from "@/lib/types";
 export default async function BusinessAnalyticsPage() {
   const { data: summary, error } = await load<AnalyticsSummary>(analyticsFor("business"));
 
+  const rawSeries = summary?.series ?? [];
+  const grain = detectGrain(rawSeries.map((p) => p.period));
   const series: DeliveryPoint[] =
-    summary?.series.map((point) => ({
+    rawSeries.map((point) => ({
       label: deliveryLabel(point.period),
       impressions: point.impressions,
       clicks: point.clicks,
-    })) ?? [];
+    }));
+  const deltas = seriesDeltas(rawSeries, deliveryLabel);
+  const vsCaption = deltas.prevLabel ? `vs ${deltas.prevLabel}` : undefined;
 
   const formats = summary?.by_format ?? {};
 
@@ -24,11 +30,40 @@ export default async function BusinessAnalyticsPage() {
     <div className="space-y-6">
       <PageHeader title="Analytics" subtitle="Delivery and spend reported by the ad server." />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Impressions" value={summary ? formatCount(summary.impressions) : "—"} icon="analytics" error={error} />
-        <MetricCard label="Clicks" value={summary ? formatCount(summary.clicks) : "—"} icon="campaigns" error={error} />
-        <MetricCard label="CTR" value={summary ? formatCTR(summary.clicks, summary.impressions) : "—"} icon="overview" error={error} />
-        <MetricCard label="Spend" value={summary ? formatKobo(summary.spend_kobo) : "—"} icon="billing" tone="money" error={error} />
+      <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Impressions"
+          value={summary ? formatCount(summary.impressions) : "—"}
+          icon="analytics"
+          error={error}
+          delta={deltas.impressions ? { ...deltas.impressions, caption: vsCaption } : null}
+        />
+        <MetricCard
+          label="Clicks"
+          value={summary ? formatCount(summary.clicks) : "—"}
+          icon="campaigns"
+          error={error}
+          delta={deltas.clicks ? { ...deltas.clicks, caption: vsCaption } : null}
+        />
+        <MetricCard
+          label="CTR"
+          value={summary ? formatCTR(summary.clicks, summary.impressions) : "—"}
+          icon="overview"
+          error={error}
+          delta={deltas.ctr ? { ...deltas.ctr, caption: vsCaption } : null}
+        />
+        <MetricCard
+          label="Remaining budget"
+          value={summary ? formatKobo(summary.remaining_budget_kobo) : "—"}
+          icon="billing"
+          tone="money"
+          error={error}
+          footer={
+            summary ? (
+              <SpendFooter spendKobo={summary.spend_kobo} remainingKobo={summary.remaining_budget_kobo} />
+            ) : null
+          }
+        />
       </div>
 
       {error ? (
@@ -40,8 +75,8 @@ export default async function BusinessAnalyticsPage() {
       ) : (
         <DeliveryChart
           data={series}
+          grain={grain}
           title="Impressions and CTR"
-          description="Views and click-through rate reported by the ad server."
         />
       )}
 
