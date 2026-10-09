@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { nairaInputToKobo } from "@/lib/format";
 import type { ApiError, Payout } from "@/lib/types";
+import { Button } from "./Button";
+import { Field, FieldErrors, TextInput } from "./Field";
 
 const schema = z.object({
   naira: z.coerce.number().positive("Enter an amount greater than zero."),
@@ -51,40 +53,27 @@ export function PayoutRequestForm() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-sm space-y-4" noValidate>
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium">
-          Amount (₦)
-        </label>
-        <input
+      <Field id="amount" label="Amount (₦)" helper="Paid to your saved bank account after admin review.">
+        <TextInput
           id="amount"
           name="amount"
           inputMode="decimal"
           value={naira}
           onChange={(e) => setNaira(e.target.value)}
-          className="mt-1 w-full rounded-lg border px-3 py-2"
         />
-      </div>
+      </Field>
 
-      {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
-          {errors.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      )}
+      <FieldErrors errors={errors} />
       {requested && (
-        <p role="status" className="text-sm text-brand-strong">
+        <p role="status" className="text-sm text-pine">
           Payout requested — awaiting admin review.
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
-      >
-        {busy ? "Requesting…" : "Request payout"}
-      </button>
+      {/* Gold sits next to money: withdrawing is the one place it lives here. */}
+      <Button type="submit" variant="gold" disabled={busy}>
+        {busy ? "Requesting…" : "Withdraw earnings"}
+      </Button>
     </form>
   );
 }

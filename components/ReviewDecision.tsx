@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { adminEndpoints } from "@/lib/endpoints";
 import type { ApiError } from "@/lib/types";
+import { Button } from "./Button";
+import { TextInput } from "./Field";
 
 interface ReviewDecisionProps {
   kind: "business" | "developer" | "app" | "campaign" | "creative" | "payout";
@@ -14,7 +16,8 @@ interface ReviewDecisionProps {
 /**
  * Approve / reject for one queue row. §12, §16.4 and the marketplace terms all
  * require a human decision with a reason on file, so a rejection without a
- * reason never reaches the network.
+ * reason never reaches the network. Destructive action is outlined red, never
+ * filled (design-system.md) — red stays rare so it keeps meaning "look here".
  */
 export function ReviewDecision({ kind, id }: ReviewDecisionProps) {
   const router = useRouter();
@@ -44,36 +47,42 @@ export function ReviewDecision({ kind, id }: ReviewDecisionProps) {
     }
   }
 
-  const button = (decision: Decision, label: string, className: string) => (
-    <button
-      type="button"
-      onClick={() => decide(decision)}
-      disabled={busy !== null}
-      className={`rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-60 ${className}`}
-    >
-      {busy === decision ? "Saving…" : label}
-    </button>
-  );
-
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor={`reason-${kind}-${id}`} className="sr-only">
-          Reason for rejecting this {kind}
-        </label>
-        {button("approved", "Approve", "bg-brand text-white hover:bg-brand-strong")}
-        {button("rejected", "Reject", "border hover:bg-gray-50")}
+        <span id={`reason-label-${kind}-${id}`} className="sr-only">
+          Reason for rejecting this {kind} (required to reject)
+        </span>
+        <Button
+          type="button"
+          variant="primary"
+          onClick={() => decide("approved")}
+          disabled={busy !== null}
+          className="px-3 py-1.5 text-xs"
+        >
+          {busy === "approved" ? "Saving…" : "Approve"}
+        </Button>
+        <Button
+          type="button"
+          variant="danger-outline"
+          onClick={() => decide("rejected")}
+          disabled={busy !== null}
+          className="px-3 py-1.5 text-xs"
+        >
+          {busy === "rejected" ? "Saving…" : "Reject"}
+        </Button>
       </div>
-      <input
+      <TextInput
         id={`reason-${kind}-${id}`}
         name="reason"
+        aria-labelledby={`reason-label-${kind}-${id}`}
         placeholder="Reason (required to reject)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
-        className="w-full max-w-xs rounded-lg border px-3 py-1.5 text-xs"
+        className="max-w-xs text-sm"
       />
       {error && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-alert">
           {error}
         </p>
       )}

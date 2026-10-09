@@ -6,6 +6,8 @@ import { apiFetch } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { nairaInputToKobo } from "@/lib/format";
 import type { ApiError, Payment } from "@/lib/types";
+import { Button } from "./Button";
+import { Field, FieldErrors, TextInput } from "./Field";
 
 const schema = z.object({
   naira: z.coerce.number().positive("Enter an amount greater than zero."),
@@ -45,33 +47,20 @@ export function FundForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium">
-          Amount (₦)
-        </label>
-        <input
+      <Field id="amount" label="Amount (₦)" helper="Money leaves your bank only on the Bachs page that opens next.">
+        <TextInput
           id="amount"
           name="amount"
           inputMode="decimal"
           value={naira}
           onChange={(e) => setNaira(e.target.value)}
-          className="mt-1 w-full rounded-lg border px-3 py-2"
         />
-      </div>
-      {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
-          {errors.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      )}
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
-      >
-        {busy ? "Opening checkout…" : "Fund via Bachs"}
-      </button>
+      </Field>
+      <FieldErrors errors={errors} />
+      {/* Gold sits next to money: funding is the one place a gold button lives. */}
+      <Button type="submit" variant="gold" disabled={busy}>
+        {busy ? "Opening checkout…" : "Fund wallet via Bachs"}
+      </Button>
     </form>
   );
 }

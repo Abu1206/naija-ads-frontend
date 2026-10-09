@@ -8,6 +8,8 @@ import { endpoints } from "@/lib/endpoints";
 import { nairaInputToKobo } from "@/lib/format";
 import type { AdType, ApiError, Campaign, CampaignObjective, Creative } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
+import { Button } from "./Button";
+import { Field, FieldErrors, SelectInput, TextInput } from "./Field";
 
 const schema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
@@ -89,87 +91,67 @@ export function CampaignForm({
     }
   }
 
-  const field = "mt-1 w-full rounded-lg border px-3 py-2";
-
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-5" noValidate>
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium">
-          Campaign name
-        </label>
-        <input id="name" value={name} onChange={(e) => setName(e.target.value)} className={field} />
-      </div>
+      <Field id="name" label="Campaign name" helper="Something you will recognise later, like “Detty December sales”.">
+        <TextInput id="name" value={name} onChange={(e) => setName(e.target.value)} />
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="objective" className="block text-sm font-medium">
-            Objective
-          </label>
-          <select
+        <Field
+          id="objective"
+          label="Objective"
+          helper={objective === "clicks" ? "You pay when someone taps your ad." : "You pay for every 1,000 times your ad is seen."}
+        >
+          <SelectInput
             id="objective"
             value={objective}
             onChange={(e) => setObjective(e.target.value as CampaignObjective)}
-            className={field}
           >
-            <option value="impressions">Impressions</option>
+            <option value="impressions">Views</option>
             <option value="clicks">Clicks</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="ad_type" className="block text-sm font-medium">
-            Ad format
-          </label>
-          <select
-            id="ad_type"
-            value={adType}
-            onChange={(e) => setAdType(e.target.value as AdType)}
-            className={field}
-          >
+          </SelectInput>
+        </Field>
+        <Field id="ad_type" label="Ad format">
+          <SelectInput id="ad_type" value={adType} onChange={(e) => setAdType(e.target.value as AdType)}>
             <option value="banner">Banner</option>
             <option value="interstitial">Interstitial</option>
             <option value="rewarded">Rewarded video</option>
             <option value="audio">Audio</option>
-          </select>
-        </div>
+          </SelectInput>
+        </Field>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="total_budget" className="block text-sm font-medium">
-            Total budget (₦)
-          </label>
-          <input
+        <Field id="total_budget" label="Total budget (₦)" helper="The most this campaign can ever spend.">
+          <TextInput
             id="total_budget"
             inputMode="decimal"
             value={totalBudget}
             onChange={(e) => setTotalBudget(e.target.value)}
-            className={field}
           />
-        </div>
-        <div>
-          <label htmlFor="daily_budget" className="block text-sm font-medium">
-            Daily budget (₦)
-          </label>
-          <input
+        </Field>
+        <Field id="daily_budget" label="Daily budget (₦)" helper="Spending pauses each day once this is hit.">
+          <TextInput
             id="daily_budget"
             inputMode="decimal"
             value={dailyBudget}
             onChange={(e) => setDailyBudget(e.target.value)}
-            className={field}
           />
-        </div>
+        </Field>
       </div>
 
       <fieldset>
-        <legend className="text-sm font-medium">Target locations</legend>
-        <p className="mb-2 text-xs text-gray-500">Country is fixed to Nigeria for MVP.</p>
-        <div className="flex flex-wrap gap-3 text-sm">
+        <legend className="text-sm font-medium text-ink">Target locations</legend>
+        <p className="mb-2 text-xs text-muted">Country is fixed to Nigeria for MVP.</p>
+        <div className="flex flex-wrap gap-3 text-sm text-ink">
           {LOCATIONS.map((location) => (
-            <label key={location} className="flex items-center gap-2">
+            <label key={location} className="flex min-h-[44px] items-center gap-2">
               <input
                 type="checkbox"
                 checked={locations.includes(location)}
                 onChange={() => toggleLocation(location)}
+                className="h-4 w-4 accent-naija"
               />
               {location}
             </label>
@@ -177,16 +159,12 @@ export function CampaignForm({
         </div>
       </fieldset>
 
-      <div>
-        <label htmlFor="creative" className="block text-sm font-medium">
-          Creative
-        </label>
-        <select
+      <Field id="creative" label="Creative" helper="The picture, video or sound people will see.">
+        <SelectInput
           id="creative"
           value={creativeId}
           onChange={(e) => setCreativeId(e.target.value)}
           disabled={creatives.length === 0}
-          className={field}
         >
           <option value="">
             {creativesError
@@ -200,47 +178,37 @@ export function CampaignForm({
               {creative.ad_type} · {creative.id}
             </option>
           ))}
-        </select>
-        {creativesError && (
-          <p role="alert" className="mt-1 text-sm text-red-600">
-            {creativesError} — upload a creative, then reload this page.
-          </p>
-        )}
-      </div>
+        </SelectInput>
+      </Field>
+      {creativesError && (
+        <p role="alert" className="text-sm text-alert">
+          {creativesError} — upload a creative, then reload this page.
+        </p>
+      )}
 
-      <div>
-        <label htmlFor="destination_url" className="block text-sm font-medium">
-          Destination URL
-        </label>
-        <input
+      <Field
+        id="destination_url"
+        label="Destination URL"
+        helper="Where people land when they tap your ad."
+      >
+        <TextInput
           id="destination_url"
           type="url"
           value={destinationUrl}
           onChange={(e) => setDestinationUrl(e.target.value)}
           placeholder="https://yourbusiness.ng/offer"
-          className={field}
         />
-      </div>
+      </Field>
 
-      {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
-          {errors.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      )}
+      <FieldErrors errors={errors} />
 
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
-        >
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" disabled={busy}>
           {busy ? "Submitting…" : "Submit for review"}
-        </button>
-        <a href="/business/campaigns" className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
+        </Button>
+        <Button variant="ghost" onClick={() => router.push("/business/campaigns")} type="button">
           Cancel
-        </a>
+        </Button>
       </div>
     </form>
   );
