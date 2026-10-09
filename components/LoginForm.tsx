@@ -6,6 +6,8 @@ import { z } from "zod";
 import { apiFetch } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import type { ApiError } from "@/lib/types";
+import { Button } from "./Button";
+import { Field, FieldErrors, TextInput } from "./Field";
 
 const schema = z.object({
   email: z.email("Enter a valid email address."),
@@ -43,54 +45,34 @@ export function LoginForm() {
     }
   }
 
-  const control = "mt-1 w-full rounded-lg border px-3 py-2";
-
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium">
-          Email
-        </label>
-        <input
+      <Field id="email" label="Email">
+        <TextInput
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={control}
         />
-      </div>
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium">
-          Password
-        </label>
-        <input
+      </Field>
+      <Field id="password" label="Password">
+        <TextInput
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={control}
         />
-      </div>
+      </Field>
 
-      {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
-          {errors.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      )}
+      <FieldErrors errors={errors} />
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
-      >
+      <Button type="submit" disabled={busy} className="w-full">
         {busy ? "Logging in…" : "Log in"}
-      </button>
+      </Button>
     </form>
   );
 }

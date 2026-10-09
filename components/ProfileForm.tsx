@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import type { ApiError } from "@/lib/types";
+import { Button } from "./Button";
+import { Field, FieldErrors, SelectInput, TextArea, TextInput } from "./Field";
 
 export interface ProfileField {
   name: string;
@@ -12,6 +14,7 @@ export interface ProfileField {
   options?: { value: string; label: string }[];
   required?: boolean;
   placeholder?: string;
+  helper?: string;
 }
 
 interface ProfileFormProps {
@@ -65,18 +68,22 @@ export function ProfileForm({
     }
   }
 
-  const control = "mt-1 w-full rounded-lg border px-3 py-2";
-
   return (
     <form onSubmit={onSubmit} className="max-w-lg space-y-4" noValidate>
       {fields.map((field) => (
-        <div key={field.name}>
-          <label htmlFor={field.name} className="block text-sm font-medium">
-            {field.label}
-            {field.required && <span aria-hidden="true"> *</span>}
-          </label>
+        <Field
+          key={field.name}
+          id={field.name}
+          label={
+            <>
+              {field.label}
+              {field.required && <span aria-hidden="true"> *</span>}
+            </>
+          }
+          helper={field.helper}
+        >
           {field.type === "textarea" ? (
-            <textarea
+            <TextArea
               id={field.name}
               name={field.name}
               rows={3}
@@ -84,25 +91,23 @@ export function ProfileForm({
               placeholder={field.placeholder}
               value={values[field.name] ?? ""}
               onChange={(e) => update(field.name, e.target.value)}
-              className={control}
             />
           ) : field.type === "select" ? (
-            <select
+            <SelectInput
               id={field.name}
               name={field.name}
               required={field.required}
               value={values[field.name] ?? ""}
               onChange={(e) => update(field.name, e.target.value)}
-              className={control}
             >
               {field.options?.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </SelectInput>
           ) : (
-            <input
+            <TextInput
               id={field.name}
               name={field.name}
               type={field.type ?? "text"}
@@ -110,32 +115,21 @@ export function ProfileForm({
               placeholder={field.placeholder}
               value={values[field.name] ?? ""}
               onChange={(e) => update(field.name, e.target.value)}
-              className={control}
             />
           )}
-        </div>
+        </Field>
       ))}
 
-      {errors.length > 0 && (
-        <ul role="alert" className="list-disc space-y-1 pl-5 text-sm text-red-600">
-          {errors.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      )}
+      <FieldErrors errors={errors} />
       {done && (
-        <p role="status" className="text-sm text-brand-strong">
+        <p role="status" className="text-sm text-pine">
           {successNote}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-60"
-      >
+      <Button type="submit" disabled={busy}>
         {busy ? "Saving…" : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }
