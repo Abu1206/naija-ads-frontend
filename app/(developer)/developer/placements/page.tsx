@@ -34,6 +34,7 @@ export default async function PlacementsPage() {
         { value: "banner", label: "Banner" },
         { value: "interstitial", label: "Interstitial" },
         { value: "rewarded", label: "Rewarded" },
+        { value: "audio", label: "Audio" },
       ],
     },
   ];
@@ -42,7 +43,7 @@ export default async function PlacementsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Placements"
-        subtitle="Banner, interstitial and rewarded slots per app — each gets its own PLACEMENT_ID."
+        subtitle="Banner, interstitial, rewarded and audio slots per app — each gets its own PLACEMENT_ID."
       />
 
       <section className="rounded-xl border bg-white p-6">
@@ -76,7 +77,7 @@ export default async function PlacementsPage() {
         ]}
         rows={placements.data ?? []}
         error={placements.error}
-        emptyMessage="No placements yet. Create banner, interstitial, or rewarded placements per app."
+        emptyMessage="No placements yet. Create a placement for each format slot your app serves."
         getRowKey={(p) => p.placement_id}
       />
     </div>

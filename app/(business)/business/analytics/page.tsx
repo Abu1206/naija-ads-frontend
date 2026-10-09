@@ -5,6 +5,7 @@ import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
 import { formatCTR, formatCount, formatKobo } from "@/lib/format";
 import type { AnalyticsSummary } from "@/lib/types";
+import { AD_TYPES } from "@/lib/types";
 
 /** Impressions, clicks, CTR, spend and format breakdown — all backend-computed. */
 export default async function BusinessAnalyticsPage() {
@@ -45,8 +46,8 @@ export default async function BusinessAnalyticsPage() {
 
       <section className="rounded-xl border bg-white p-5">
         <h2 className="mb-4 font-semibold">Format breakdown</h2>
-        <dl className="grid gap-4 sm:grid-cols-3">
-          {(["banner", "interstitial", "rewarded"] as const).map((format) => {
+        <dl className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {AD_TYPES.map((format) => {
             const row = formats[format];
             return (
               <div key={format} className="rounded-lg border p-4">

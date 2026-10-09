@@ -5,8 +5,10 @@
 
 export type Role = "business" | "developer" | "admin";
 
-// MVP ships three formats (spec §1 and §32).
-export type AdType = "banner" | "interstitial" | "rewarded";
+// Four served formats (AGENTS.md §3 and the /docs formats page, which spells out
+// audio placement rules). One source so no form can offer a subset of the contract.
+export const AD_TYPES = ["banner", "interstitial", "rewarded", "audio"] as const;
+export type AdType = (typeof AD_TYPES)[number];
 
 export type CampaignObjective = "impressions" | "clicks";
 

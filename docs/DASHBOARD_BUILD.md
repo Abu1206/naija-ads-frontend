@@ -9,6 +9,16 @@ document) plus `AGENTS.md`.
 Every dashboard route in AGENTS.md §3 is a real page with live data fetching, loading / error /
 empty states, and navigation between them. Nothing renders mock data.
 
+**Public site** (no session required)
+
+| Route | What it shows |
+| --- | --- |
+| `/` | Landing + role router. Lives in `app/(marketing)/page.tsx` so it inherits the product nav and legal footer; a signed-in visitor is redirected to their dashboard instead |
+| `/advertisers`, `/developers`, `/pricing` | Demand-side and supply-side pages, CPM model |
+| `/docs/*`, `/tutorials/*` | Developer integration docs and first-campaign / first-placement walkthroughs |
+| `/login` | `LoginForm` → `POST /api/v1/auth/login`, then `/` (which routes to the dashboard) |
+| `/signup?role=business\|developer` | Role tabs + the profile fields spec §6.1/§9.1 name, posted to the matching create endpoint |
+
 **Business** (`/business`, role `business`)
 
 | Route | What it shows |
@@ -27,7 +37,7 @@ empty states, and navigation between them. Nothing renders mock data.
 | --- | --- |
 | `/developer` | Overview: impressions, fill rate, estimated revenue, eCPM, revenue by format, earnings, payouts |
 | `/developer/apps` | Register an app (§6.4) + list with the backend-issued `APP_ID` |
-| `/developer/placements` | Create banner/interstitial/rewarded placements per app (§6.5) |
+| `/developer/placements` | Create banner/interstitial/rewarded/audio placements per app (§6.5) |
 | `/developer/analytics` | Requests, fill rate, eCPM, delivery chart, per-app performance |
 | `/developer/earnings` | Earnings ledger with the §17 status ladder |
 | `/developer/payouts` | Payout account, payout request, payout history |
@@ -46,8 +56,8 @@ empty states, and navigation between them. Nothing renders mock data.
 Shared pieces: `components/Sidebar.tsx` (active-link nav), `DashboardShell.tsx` (sidebar + page
 header + green CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`, `BarChart.tsx`,
 `Icon.tsx`, and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
-(reused for business profile, developer profile, app registration, placement creation and the
-payout account), `PayoutRequestForm`, `ReviewDecision`.
+(reused for business profile, developer profile, app registration, placement creation, the payout
+account and both signup variants), `PayoutRequestForm`, `ReviewDecision`, `LoginForm`.
 
 ## 2. Look and feel
 
@@ -92,6 +102,7 @@ travels, and maps `401` → re-login and `422` → per-field errors.
 
 | Action | Request | Spec status |
 | --- | --- | --- |
+| Log in | `POST /api/v1/auth/login` with `{ email, password }` | documented (AGENTS.md §4) |
 | Business profile + verification | `POST /api/v1/businesses` | documented |
 | Developer profile + verification | `POST /api/v1/developers` | documented |
 | Register app | `POST /api/v1/apps` | documented |
@@ -105,6 +116,11 @@ travels, and maps `401` → re-login and `422` → per-field errors.
 
 The presigned `PUT` deliberately bypasses `lib/api.ts`: that client forces JSON headers, which
 would break an R2 signature.
+
+Two details the auth wiring depends on, both currently assumed: `POST /api/v1/auth/login` is
+expected to set the httpOnly session cookie itself (the client then only redirects to `/`, which
+routes by role — it never handles a token), and signup posts the same `POST /api/v1/businesses` /
+`/developers` that `/business/onboarding` and `/developer/onboarding` use. See §6.
 
 ### Guards
 
@@ -138,12 +154,15 @@ cannot import `next/headers`.
 ```
 pnpm typecheck   # tsc --noEmit — clean
 pnpm lint        # eslint — clean
-pnpm test        # vitest — 23 passed (format, api/load, role)
+pnpm test        # vitest — 24 passed (format, api + unreachable-API mapping, role)
 ```
 
 `pnpm dev` + curl and a real browser pass over all 19 dashboard routes: each renders `200` with its
 error state when the API is unreachable, the sidebar highlights the current page, and a
-`business` session hitting `/admin/reviews` is redirected to `/403`.
+`business` session hitting `/admin/reviews` is redirected to `/403`. All eleven public routes
+(`/`, the two role pages, pricing, five docs pages, two tutorials, privacy, terms) render `200`
+with the marketing nav and legal footer, and `/login` + `/signup?role=…` render their labelled
+forms.
 
 Note: tests need Node ≥ 22 (`package.json` engines). The system `/usr/bin/node` is v20 and jsdom
 fails there; run with the nvm Node 24 on `PATH`.
@@ -163,6 +182,19 @@ These are deliberate blanks, not oversights:
    token, not read a role label.
 5. **CSRF** — state-changing `POST`s ride a cookie with no CSRF token yet. Needs a decision
    (same-site cookie or token) before auth ships.
-6. **`audio` format** — AGENTS.md §3 and the public marketing pages list four formats; the spec
-   (§1, §32) ships three. `lib/types.ts` follows the spec, so the marketing copy still over-promises.
+6. **`audio` format — needs one line of confirmation from the Go server.** `AdType` now carries
+   four values (`lib/types.ts` exports `AD_TYPES`, the single list every format picker and
+   per-format breakdown reads). This follows AGENTS.md §3 and `/docs/formats`, which spell out
+   audio placement rules; the earlier three-value mirror made a documented format uncreatable. If
+   the backend ships three, delete `"audio"` in that one place — do not re-fork the list.
 7. **Docs pages** — `/docs` shows ad-request/event paths without the `/api` prefix the spec uses.
+8. **Login response shape** — the client assumes the backend sets the session cookie on
+   `POST /api/v1/auth/login` and ignores the response body. If login returns a token instead, this
+   app has no place to put it (AGENTS.md §6 forbids localStorage) and the endpoint must move to a
+   route handler that sets the cookie server-side.
+9. **Signup vs onboarding overlap** — both post to `/api/v1/businesses` and `/api/v1/developers`.
+   If the create-profile call is what actually opens the account, the onboarding pages are
+   re-submitting an existing profile; if a separate auth endpoint creates credentials, signup is
+   missing that call. Needs the real order from the backend.
+10. **`middleware.ts` reads a plain role string** from `naija_ads_session` (see gap 4), so
+    `/login`'s redirect to `/` only lands on a dashboard once the backend issues a real session.

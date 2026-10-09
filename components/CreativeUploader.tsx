@@ -6,13 +6,14 @@ import { UploadDropzone } from "@/components/UploadDropzone";
 import { apiFetch } from "@/lib/api";
 import { creativeEndpoints } from "@/lib/endpoints";
 import type { AdType, ApiError } from "@/lib/types";
+import { AD_TYPES } from "@/lib/types";
 
 interface UploadIntent {
   creative_id: string;
   upload_url: string;
 }
 
-const FORMATS: AdType[] = ["banner", "interstitial", "rewarded"];
+const FORMATS: readonly AdType[] = AD_TYPES;
 
 /**
  * Presigned R2 flow (AGENTS.md §4): ask the backend for an upload URL, PUT the
