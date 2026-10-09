@@ -4,6 +4,8 @@
 // spec — the backend owns those and renames need a cross-repo RFC, not a search
 // and replace across pages.
 
+import type { ChartRange } from "./ranges";
+
 export const endpoints = {
   authLogin: "/api/v1/auth/login",
   campaigns: "/api/v1/campaigns",
@@ -47,6 +49,10 @@ export const creativeEndpoints = {
   confirm: "/api/v1/creatives",
 } as const;
 
-export function analyticsFor(scope: "business" | "developer"): string {
-  return `${endpoints.analytics}?scope=${scope}`;
+export function analyticsFor(scope: "business" | "developer", range?: ChartRange): string {
+  // `range` (7d/30d/90d/6m) is an assumed param inside the documented
+  // `/api/v1/analytics?...` family: the backend owns the grain it serves per
+  // range (daily/daily/weekly/monthly) and the frontend renders it as-is.
+  const base = `${endpoints.analytics}?scope=${scope}`;
+  return range ? `${base}&range=${range}` : base;
 }

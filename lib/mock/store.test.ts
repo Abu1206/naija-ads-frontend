@@ -19,6 +19,45 @@ describe("mockRead", () => {
     expect(supply).not.toBeNull();
   });
 
+  it("windows the series by range at the grain the backend would serve", () => {
+    const d7 = mockRead<{ series: { period: string; impressions: number; clicks: number }[] }>(
+      "/api/v1/analytics?scope=business&range=7d",
+    );
+    expect(d7?.series).toHaveLength(7);
+    // Full days only: the window ends on the last complete day, never today.
+    expect(d7?.series[d7.series.length - 1]?.period).toBe("2026-10-08");
+    expect(d7?.series.every((p) => p.clicks <= p.impressions)).toBe(true);
+
+    const d30 = mockRead<{ series: { period: string }[] }>(
+      "/api/v1/analytics?scope=business&range=30d",
+    );
+    expect(d30?.series).toHaveLength(30);
+
+    const w90 = mockRead<{ series: { period: string }[] }>(
+      "/api/v1/analytics?scope=developer&range=90d",
+    );
+    // Thirteen exact 7-day buckets, oldest first.
+    expect(w90?.series).toHaveLength(13);
+    const [first, second] = [w90!.series[0]!.period, w90!.series[1]!.period];
+    const gapDays =
+      (new Date(`${second}T00:00:00Z`).getTime() - new Date(`${first}T00:00:00Z`).getTime()) /
+      86400000;
+    expect(gapDays).toBe(7);
+
+    const m6 = mockRead<{ series: { period: string }[] }>(
+      "/api/v1/analytics?scope=business&range=6m",
+    );
+    expect(m6?.series).toHaveLength(6);
+    expect(m6?.series[0]?.period).toBe("2026-05");
+
+    // No range param keeps the legacy monthly series; totals stay all-time.
+    const legacy = mockRead<{ series: unknown[]; impressions: number }>(
+      "/api/v1/analytics?scope=business",
+    );
+    expect(legacy?.series).toHaveLength(6);
+    expect(legacy?.impressions).toBe(5172900);
+  });
+
   it("scopes owned collections to the signed-in account", () => {
     const campaigns = mockRead<{ business_id: string }[]>("/api/v1/campaigns");
     expect(campaigns?.length).toBeGreaterThan(0);

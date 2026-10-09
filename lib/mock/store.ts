@@ -26,16 +26,20 @@ import type {
   Placement,
 } from "@/lib/types";
 import { isRole, roleFromLoginEmail } from "./session";
+import { parseChartRange } from "@/lib/ranges";
+import { toWeekly } from "./series";
 import {
   apps as seedApps,
   auditLogs as seedAuditLogs,
   businesses as seedBusinesses,
   businessAnalytics,
+  businessDaily,
   campaigns as seedCampaigns,
   creatives as seedCreatives,
   CURRENT_BUSINESS_ID,
   CURRENT_DEVELOPER_ID,
   developerAnalytics,
+  developerDaily,
   developers as seedDevelopers,
   earnings as seedEarnings,
   fraudAlerts as seedFraudAlerts,
@@ -122,6 +126,32 @@ function scopeParam(path: string): string | null {
 }
 
 /**
+ * Windowed series for the ranged chart. Totals and by_format stay all-time —
+ * only the series is windowed, the way the backend scopes a ranged query.
+ * Unknown or missing ranges fall back to the monthly series (the pre-range
+ * behaviour), so old callers keep working.
+ */
+function rangedAnalytics(scope: "business" | "developer", path: string) {
+  const query = path.split("?")[1] ?? "";
+  // Absent range = legacy caller (e.g. the admin overview): keep the monthly
+  // series. Present-but-unknown parses to the page default, like the pages do.
+  const raw = new URLSearchParams(query).get("range");
+  const range = raw === null ? "6m" : parseChartRange(raw);
+  const base = scope === "developer" ? developerAnalytics : businessAnalytics;
+  const daily = scope === "developer" ? developerDaily : businessDaily;
+  switch (range) {
+    case "7d":
+      return { ...base, series: daily.slice(-7) };
+    case "30d":
+      return { ...base, series: daily.slice(-30) };
+    case "90d":
+      return { ...base, series: toWeekly(daily) };
+    case "6m":
+      return base;
+  }
+}
+
+/**
  * Resolves a `load()` path to fixture data. Returns `null` when nothing matches
  * — the caller then renders its own "no data" state rather than inventing one.
  */
@@ -132,8 +162,8 @@ export function mockRead<T>(path: string): T | null {
 
   switch (clean) {
     case "/api/v1/analytics":
-      if (scope === "developer") return developerAnalytics as T;
-      return businessAnalytics as T;
+      if (scope === "developer") return rangedAnalytics("developer", path) as T;
+      return rangedAnalytics("business", path) as T;
     case "/api/v1/campaigns":
       return s.campaigns.filter((c) => c.business_id === CURRENT_BUSINESS_ID) as T;
     case "/api/v1/creatives":
