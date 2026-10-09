@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api";
 import { creativeEndpoints } from "@/lib/endpoints";
 import type { AdType, ApiError } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
+import { Field } from "./Field";
+import { SelectInput } from "./Field";
 
 interface UploadIntent {
   creative_id: string;
@@ -63,37 +65,34 @@ export function CreativeUploader() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <label htmlFor="upload-format" className="block text-sm font-medium">
-          Format this creative serves
-        </label>
-        <select
+      <Field id="upload-format" label="Format this creative serves">
+        <SelectInput
           id="upload-format"
           value={adType}
           onChange={(e) => setAdType(e.target.value as AdType)}
-          className="mt-1 w-full rounded-lg border px-3 py-2 sm:w-56"
+          className="sm:w-56"
         >
           {FORMATS.map((format) => (
             <option key={format} value={format} className="capitalize">
               {format}
             </option>
           ))}
-        </select>
-      </div>
+        </SelectInput>
+      </Field>
 
       <UploadDropzone onFile={upload} />
 
       {busy && (
-        <p role="status" aria-live="polite" className="text-sm text-gray-500">
+        <p role="status" aria-live="polite" className="text-sm text-muted">
           {status}
         </p>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-alert">
           {error}
         </p>
       )}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         The client only pre-checks type and size; the backend re-validates dimensions, metadata and
         format rules and can still reject this creative.
       </p>

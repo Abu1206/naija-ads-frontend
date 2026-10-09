@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+/** Client-side type/size pre-check. Server rejection is still expected/handled. */
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "video/mp4"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB client pre-check; server validates for real.
 
@@ -9,7 +10,6 @@ interface UploadDropzoneProps {
   onFile: (file: File) => void;
 }
 
-/** Client-side type/size pre-check. Server rejection is still expected/handled. */
 export function UploadDropzone({ onFile }: UploadDropzoneProps) {
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ export function UploadDropzone({ onFile }: UploadDropzoneProps) {
     <div>
       <label
         htmlFor="creative-upload"
-        className="block cursor-pointer rounded border-2 border-dashed p-8 text-center text-gray-500 hover:border-gray-400"
+        className="block cursor-pointer rounded-card border-2 border-dashed border-mist bg-cloud p-8 text-center text-muted hover:border-naija"
       >
         Drop a creative here or click to browse (PNG / JPEG / MP4, max 5MB)
       </label>
@@ -43,7 +43,7 @@ export function UploadDropzone({ onFile }: UploadDropzoneProps) {
         onChange={(e) => handle(e.target.files?.[0])}
       />
       {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-sm text-alert">
           {error}
         </p>
       )}
