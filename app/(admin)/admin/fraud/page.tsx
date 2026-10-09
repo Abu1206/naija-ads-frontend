@@ -43,7 +43,7 @@ export default async function FraudPage() {
         getRowKey={(a) => a.id}
       />
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         Rewards are validated server-side (§8.3), so a client can never claim a completion — the
         alerts above flag patterns, and holding an earning stays a backend decision.
       </p>

@@ -35,7 +35,7 @@ export default async function AuditPage() {
         getRowKey={(l) => l.id}
       />
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         Verification decisions, funding credits, payout approvals and fraud holds all land here —
         the frontend only reads them.
       </p>
