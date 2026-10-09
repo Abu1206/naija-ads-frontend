@@ -6,8 +6,8 @@ export default function ForbiddenPage() {
   return (
     <div className="mx-auto max-w-md space-y-6 py-8">
       <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-bold">403 — Wrong dashboard</h1>
-        <p className="text-sm text-gray-600">
+        <h1 className="font-display text-2xl font-bold text-ink">403 — Wrong dashboard</h1>
+        <p className="text-sm text-muted">
           Your account doesn&apos;t have access to that section. Business, developer, and admin areas
           are separate.
         </p>

@@ -43,16 +43,16 @@ export default async function SignupPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Join Naija Ads</h1>
+      <h1 className="font-display text-2xl font-bold text-ink">Join Naija Ads</h1>
 
-      <div className="flex rounded-lg border p-1 text-sm" role="group" aria-label="Account type">
+      <div className="flex rounded-lg border border-mist p-1 text-sm" role="group" aria-label="Account type">
         {(Object.keys(ROLES) as (keyof typeof ROLES)[]).map((key) => (
           <Link
             key={key}
             href={`/signup?role=${key}`}
             aria-current={role === key ? "page" : undefined}
-            className={`flex-1 rounded px-3 py-2 text-center font-medium ${
-              role === key ? "bg-brand text-white" : "text-gray-600 hover:bg-gray-100"
+            className={`flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 py-2 text-center font-medium ${
+              role === key ? "bg-naija text-white" : "text-muted hover:bg-cloud"
             }`}
           >
             {ROLES[key].label}
@@ -60,7 +60,7 @@ export default async function SignupPage({
         ))}
       </div>
 
-      <p className="text-sm text-gray-600">{config.heading}</p>
+      <p className="text-sm text-muted">{config.heading}</p>
 
       <ProfileForm
         endpoint={config.endpoint}
@@ -69,7 +69,7 @@ export default async function SignupPage({
         successNote="Account created — you can log in now. Verification is a separate, manual step."
       />
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted">
         Already have an account?{" "}
         <Link href="/login" className="underline">
           Log in
