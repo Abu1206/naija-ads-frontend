@@ -20,21 +20,21 @@ export default function AdvertisersPage() {
   return (
     <div className="space-y-12">
       <section className="space-y-4">
-        <h1 className="text-3xl font-bold">Put your brand inside Nigeria&apos;s favourite apps</h1>
-        <p className="max-w-2xl text-gray-600">
+        <h1 className="font-display text-3xl font-bold text-ink">Put your brand inside Nigeria&apos;s favourite apps</h1>
+        <p className="max-w-2xl text-muted">
           Naija Ads is a two-sided ad network: you buy inventory in real Nigerian games and apps,
           and pay CPM per category you target — never for clicks you didn&apos;t agree to.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/signup?role=business"
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-strong"
+            className="inline-flex min-h-[44px] items-center rounded-lg bg-naija px-4 py-2 text-sm font-medium text-white hover:bg-pine"
           >
             Start advertising
           </Link>
           <Link
             href="/pricing"
-            className="rounded border px-4 py-2 text-sm font-medium hover:bg-gray-100"
+            className="rounded-card border border-mist px-4 py-2 text-sm font-medium hover:bg-cloud"
           >
             See pricing
           </Link>
@@ -42,28 +42,28 @@ export default function AdvertisersPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Four formats, one auction</h2>
+        <h2 className="font-display text-2xl font-bold text-ink">Four formats, one auction</h2>
         <ul className="grid gap-4 sm:grid-cols-2">
           {FORMATS.map((f) => (
-            <li key={f} className="rounded border bg-white p-4">
+            <li key={f} className="rounded-card border border-mist bg-white p-4">
               <p className="font-medium">{f}</p>
             </li>
           ))}
         </ul>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           Richer formats carry higher floors. GIFs serve as a banner subtype on adaptive placements.
         </p>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">How it works</h2>
+        <h2 className="font-display text-2xl font-bold text-ink">How it works</h2>
         <ol className="space-y-3">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="rounded border bg-white p-4">
+            <li key={s.title} className="rounded-card border border-mist bg-white p-4">
               <p className="font-medium">
                 {i + 1}. {s.title}
               </p>
-              <p className="text-sm text-gray-600">{s.body}</p>
+              <p className="text-sm text-muted">{s.body}</p>
             </li>
           ))}
         </ol>

@@ -18,42 +18,42 @@ export default function PricingPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h1 className="text-3xl font-bold">CPM-only pricing, no surprises</h1>
-        <p className="max-w-2xl text-gray-600">
+        <h1 className="font-display text-3xl font-bold text-ink">CPM-only pricing, no surprises</h1>
+        <p className="max-w-2xl text-muted">
           You set one CPM bid per category you target. Every bid must clear the effective floor —
           the higher of the category floor and the format floor — or it is rejected at review, never
           silently clamped. Exact floor values are shown in the dashboard when you create a campaign.
         </p>
       </section>
 
-      <section className="overflow-x-auto rounded border bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <section className="overflow-x-auto rounded-card border border-mist bg-white">
+        <table className="min-w-full divide-y divide-mist">
+          <thead className="bg-cloud">
             <tr>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                 Format
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                 What it is
               </th>
-              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
                 Floor tier
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-mist">
             {ROWS.map((r) => (
               <tr key={r.format}>
                 <td className="px-4 py-3 text-sm font-medium">{r.format}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{r.note}</td>
-                <td className="px-4 py-3 text-sm text-gray-600">{r.floor}</td>
+                <td className="px-4 py-3 text-sm text-muted">{r.note}</td>
+                <td className="px-4 py-3 text-sm text-muted">{r.floor}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
 
-      <section className="space-y-2 text-sm text-gray-600">
+      <section className="space-y-2 text-sm text-muted">
         <p>Budgets are capped twice: a total budget and a daily budget with pacing across the day.</p>
         <p>Delivery is estimated, never guaranteed — the auction rotates winners weighted by bid.</p>
         <Link href="/signup?role=business" className="inline-block underline">
