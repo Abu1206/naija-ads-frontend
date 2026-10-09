@@ -15,8 +15,8 @@ export default async function CreativesPage() {
     <div className="space-y-6">
       <PageHeader title="Creatives" subtitle="Upload the artwork each campaign will serve." />
 
-      <section className="rounded-xl border bg-white p-5">
-        <h2 className="mb-4 font-semibold">Upload a creative</h2>
+      <section className="rounded-card border border-mist bg-white p-5">
+        <h2 className="mb-4 font-display font-semibold text-ink">Upload a creative</h2>
         <CreativeUploader />
       </section>
 
