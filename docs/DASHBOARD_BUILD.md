@@ -55,7 +55,9 @@ empty states, and navigation between them. Nothing renders mock data.
 
 Shared pieces: `components/Sidebar.tsx` (rail blended into app bg + Mist border, pine active item + spring-glide rim bar,
 gliding neutral hover wash, staggered collapse choreography, horizontal strip on phones — motion language adapted from Animate UI's radix sidebar), `DashboardShell.tsx` (sidebar + page header + primary CTA), `MetricCard.tsx`, `DataTable.tsx`, `StatusBadge.tsx`,
-`DeliveryChart.tsx`, `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
+`DeliveryChart.tsx` (shadcn chart on recharts: desktop bars + CTR line combo, tabbed
+single-series on phones — ADR 0004; `components/ui/card.tsx` + `components/ui/chart.tsx`
+are the only `ui/` primitives so far), `WalletCard.tsx` (Deep Forest + gold balance, money screens only), `AdTypeCard.tsx`,
 `Button.tsx` + `Field.tsx` (the one button set and the one field pattern every form uses),
 `Icon.tsx` (the ONLY icon source — Hugeicons via `@hugeicons/react` +
 `@hugeicons/core-free-icons`; no other icon pack, no hand-rolled SVG paths), and the client forms: `CampaignForm`, `CreativeUploader`, `FundForm`, `ProfileForm`
