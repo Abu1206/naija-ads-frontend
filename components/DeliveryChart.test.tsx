@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { DeliveryChart, DeliveryTooltipContent, deliveryLabel } from "./DeliveryChart";
 
 afterEach(() => cleanup());
@@ -25,18 +25,14 @@ beforeAll(() => {
 });
 
 const data = [
-  { label: "2026-05", impressions: 612000, clicks: 14200 },
-  { label: "2026-06", impressions: 748000, clicks: 18100 },
-  { label: "2026-07", impressions: 1104000, clicks: 28400 },
+  { label: "6 Oct", impressions: 612000, clicks: 14200 },
+  { label: "7 Oct", impressions: 748000, clicks: 18100 },
+  { label: "8 Oct", impressions: 1104000, clicks: 28400 },
 ];
 
 describe("DeliveryChart", () => {
-  it("legends Views bars plus a gold CTR line, never same-axis click bars", () => {
-    const { container } = render(<DeliveryChart data={data} title="Delivery" />);
-    // Axis titles already carry the mapping, so the legend stays short.
-    expect(screen.queryByText(/bars ·/)).toBeNull();
-    expect(screen.queryByText(/line ·/)).toBeNull();
-    expect(screen.getAllByText("Views").length).toBeGreaterThanOrEqual(2);
+  it("renders the combo without same-axis click bars", () => {
+    const { container } = render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
     expect(screen.queryByText(/^Clicks \(bars/)).toBeNull();
     // Gold reaches the CTR series through the chart config CSS var.
     const chart = container.querySelector('[data-slot="chart"]') as HTMLElement | null;
@@ -45,58 +41,69 @@ describe("DeliveryChart", () => {
   });
 
   it("labels both axes so the dual scale reads without the legend", () => {
-    render(<DeliveryChart data={data} title="Delivery" />);
+    render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
     // Desktop combo and the mobile single-series view both render (CSS picks
     // the visible one), so axis titles appear more than once.
     expect(screen.getAllByText("Views").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("CTR %").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("lifts the left axis ceiling so bars sit below the CTR line", () => {
-    // 1.104M max × 1.6 headroom snaps to a 2M ceiling (current data lands on 3M).
-    render(<DeliveryChart data={data} title="Delivery" />);
-    expect(screen.getByText("2M")).toBeInTheDocument();
+  it("snaps both axes to five round steps so the gridlines coincide", () => {
+    // 1.104M max bars ÷ 0.43 fill snaps to 0–5M by 1M; ~2.6% max CTR ÷ 0.7
+    // snaps to 0–5% by 1%. Same tick count from zero on both axes, so one set
+    // of horizontal gridlines serves both.
+    const { container } = render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
+    // Desktop and mobile trees both render (CSS picks the visible one), and
+    // both now share the same round scale.
+    expect(screen.getAllByText("5M").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("5%").length).toBeGreaterThanOrEqual(1);
+    // The first chart in DOM order is the desktop combo: exactly the
+    // five-interval lines, no more, no fewer.
+    const combo = container.querySelectorAll(".recharts-wrapper")[0];
+    expect(
+      combo?.querySelectorAll(".recharts-cartesian-grid-horizontal line"),
+    ).toHaveLength(6);
   });
 
-  it("gives touch users the Clicks tab instead of a header hint", () => {
-    const { container } = render(<DeliveryChart data={data} title="Delivery" />);
-    expect(screen.getByRole("tab", { name: "Clicks" })).toBeInTheDocument();
-    expect(screen.queryByText(/Tap a point/)).toBeNull();
-    expect(container.querySelector('[data-slot="card-footer"]')).toBeNull();
+  it("hides line dots until hover so a 30D line reads clean", () => {
+    const { container } = render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
+    expect(container.querySelectorAll(".recharts-line circle")).toHaveLength(0);
   });
+
+  it("renders nothing for empty series (callers own the empty state)", () => {
+    const { container } = render(<DeliveryChart data={data.slice(0, 0)} title="Delivery" metric="combo" />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("summarises CTR in the accessible label so the line is not colour-only", () => {
-    const { container } = render(<DeliveryChart data={data} title="Delivery" />);
+    const { container } = render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
     const figure = container.querySelector("figure");
     expect(figure?.getAttribute("aria-label")).toMatch(/2\.32% CTR/);
     expect(figure?.getAttribute("aria-label")).toMatch(/612,000 impressions/);
   });
 
-  it("offers single-metric tabs for small screens", () => {
-    render(<DeliveryChart data={data} title="Delivery" />);
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual([
+  it("gives the Clicks tab its own scale in the single-metric view", () => {
+    render(<DeliveryChart data={data} title="Delivery" metric="clicks" />);
+    expect(screen.getAllByText("Clicks").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Views")).toBeNull();
+    expect(screen.queryByText("CTR %")).toBeNull();
+  });
+
+  it("falls back to one metric at a time on narrow screens in Combo", () => {
+    render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
+    const inner = screen.getByRole("tablist", { name: "Mobile chart metric" });
+    expect(within(inner).getAllByRole("tab").map((t) => t.textContent)).toEqual([
       "Impressions",
       "Clicks",
       "CTR",
     ]);
-    fireEvent.click(screen.getByRole("tab", { name: "CTR" }));
+    fireEvent.click(within(inner).getByRole("tab", { name: "CTR" }));
     expect(screen.getByRole("tabpanel")).toBeInTheDocument();
   });
 
-  it("caps the window at the last 30 points for a daily grain", () => {
-    const daily = Array.from({ length: 35 }, (_, i) => ({
-      label: `d${String(i + 1).padStart(2, "0")}`,
-      impressions: 10000 + i * 100,
-      clicks: 200 + i * 2,
-    }));
-    const { container } = render(<DeliveryChart data={daily} title="Delivery" />);
-    const summary = container.querySelector("figure")?.getAttribute("aria-label") ?? "";
-    expect(summary).toContain("d35");
-    expect(summary).not.toContain("d01");
-  });
-
-  it("renders nothing for empty series (callers own the empty state)", () => {
-    const { container } = render(<DeliveryChart data={[]} title="Delivery" />);
-    expect(container).toBeEmptyDOMElement();
+  it("hides the mobile inner tabs when a single metric is already chosen", () => {
+    render(<DeliveryChart data={data} title="Delivery" metric="ctr" />);
+    expect(screen.queryByRole("tablist", { name: "Mobile chart metric" })).toBeNull();
   });
 });
 
@@ -127,54 +134,5 @@ describe("deliveryLabel", () => {
 
   it("shortens daily periods for axis duty", () => {
     expect(deliveryLabel("2026-10-03")).toContain("Oct");
-  });
-});
-
-describe("DeliveryChart controls", () => {
-  const monthly = [
-    { label: "May", impressions: 612000, clicks: 14200 },
-    { label: "Jun", impressions: 748000, clicks: 18100 },
-    { label: "Jul", impressions: 1104000, clicks: 28400 },
-    { label: "Aug", impressions: 1320000, clicks: 34800 },
-    { label: "Sep", impressions: 1680000, clicks: 43200 },
-    { label: "Oct", impressions: 1842000, clicks: 46100 },
-  ];
-
-  it("states the series extent on the range control so growth reads as delivery, not sample data", () => {
-    render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
-    expect(screen.getByRole("button", { name: "All (6)" })).toBeInTheDocument();
-  });
-
-  it("filters monthly series to the last 3 periods", () => {
-    const { container } = render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
-    fireEvent.click(screen.getByRole("button", { name: "Last 3" }));
-    const summary = container.querySelector("figure")?.getAttribute("aria-label") ?? "";
-    expect(summary).toContain("Oct");
-    expect(summary).toContain("Aug");
-    expect(summary).not.toContain("May");
-    expect(screen.getByRole("button", { name: "Last 3" })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("switches the desktop metric without touching the mobile tabs", () => {
-    render(<DeliveryChart data={monthly} title="Delivery" grain="monthly" />);
-    const clicks = screen.getByRole("button", { name: "Clicks" });
-    expect(clicks).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(clicks);
-    expect(clicks).toHaveAttribute("aria-pressed", "true");
-    // Mobile tablist is untouched: still three tabs, Impressions selected.
-    expect(screen.getAllByRole("tab")).toHaveLength(3);
-    expect(screen.getByRole("tab", { name: "Impressions" })).toHaveAttribute("aria-selected", "true");
-  });
-
-  it("offers day windows for daily series", () => {
-    const daily = Array.from({ length: 40 }, (_, i) => ({
-      label: `d${String(i + 1).padStart(2, "0")}`,
-      impressions: 10000 + i * 100,
-      clicks: 200 + i * 2,
-    }));
-    render(<DeliveryChart data={daily} title="Delivery" grain="daily" />);
-    expect(screen.getByRole("button", { name: "7D" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "30D" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All (40)" })).toBeInTheDocument();
   });
 });

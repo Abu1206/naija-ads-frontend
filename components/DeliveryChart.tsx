@@ -11,9 +11,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import { formatCTR, formatCount } from "@/lib/format";
+import { METRIC_LABELS, type ChartMetric } from "@/lib/ranges";
 
 // Pure formatter re-exported for existing callers; the implementation lives in
 // lib/format.ts so server pages can use it (a "use client" module's function
@@ -29,9 +29,8 @@ export interface DeliveryPoint {
 interface DeliveryChartProps {
   data: DeliveryPoint[];
   title: string;
-  /** Daily series get day-based ranges (7D/30D/90D); monthly series get
-   * period ranges (Last 3 / All). Defaults to monthly. */
-  grain?: "daily" | "monthly";
+  /** Owned by the section toolbar (URL state) — the chart only renders it. */
+  metric: ChartMetric;
 }
 
 const NAIJA = "#008751";
@@ -43,28 +42,50 @@ const PINE = "#006B40";
  * Money surfaces keep Matte Gold.
  */
 const GOLD = "#A87A1F";
+/** Legend swatches live in the section header, outside ChartContainer's CSS vars. */
+export const CHART_GOLD = GOLD;
 const MIST = "#D9E2D6";
 const MUTED = "#4D6054";
-
-/** Frontend never invents buckets: it shows the backend series, capped at the
- * last 30 points so a daily grain renders as "last 30 days" automatically. */
-const MAX_POINTS = 30;
 
 const compact = new Intl.NumberFormat("en", {
   notation: "compact",
   maximumFractionDigits: 1,
 });
 
-/** Period labels: see `deliveryLabel` in lib/format.ts (re-exported above). */
+/**
+ * Aligned round axes, five equal steps each. Both domains start at zero with
+ * the same tick count, so tick positions coincide and the horizontal gridlines
+ * pass through both axes' labels at once. Bars fill ~43% of the height and the
+ * CTR line rides at ~70% — separation, not color, keeps the line clear of the
+ * bars (gold-on-green is ~1.2:1). Current 30D data lands exactly on 0–100K by
+ * 20K and 0–5% by 1%.
+ */
+const AXIS_INTERVALS = 5;
+const BAR_FILL = 0.43;
+const LINE_FILL = 0.7;
 
-/** Headroom + snap so the CTR line gets most of the plot height. */
-function ctrCeiling(values: number[]): number {  const raw = Math.max(0, ...values);
-  if (raw <= 0) return 0.01;
-  const target = raw * 1.15;
-  for (const step of [0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2]) {
-    if (target <= step) return step;
+function roundStep(target: number): number {
+  const raw = target / AXIS_INTERVALS;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  for (const k of [1, 2, 2.5, 5, 10]) {
+    if (k * magnitude >= raw) return k * magnitude;
   }
-  return target;
+  return 10 * magnitude;
+}
+
+interface AxisScale {
+  max: number;
+  ticks: number[];
+}
+
+function barAxis(maxValue: number): AxisScale {
+  const step = roundStep(maxValue > 0 ? maxValue / BAR_FILL : AXIS_INTERVALS);
+  return { max: step * AXIS_INTERVALS, ticks: Array.from({ length: AXIS_INTERVALS + 1 }, (_, i) => i * step) };
+}
+
+function ctrAxis(maxFrac: number): AxisScale {
+  const step = roundStep(maxFrac > 0 ? maxFrac / LINE_FILL : 0.05);
+  return { max: step * AXIS_INTERVALS, ticks: Array.from({ length: AXIS_INTERVALS + 1 }, (_, i) => i * step) };
 }
 
 function pctTick(frac: number): string {
@@ -72,26 +93,9 @@ function pctTick(frac: number): string {
   return `${Number.isInteger(Math.round(v * 10) / 10) ? Math.round(v) : v.toFixed(1)}%`;
 }
 
-/**
- * Left-axis ceiling with ~60% headroom, snapped to a nice number. Bars then
- * sit in the lower part of the chart so the gold CTR line floats above them
- * instead of cutting across bar tops (gold-on-green is ~1.2:1 — separation,
- * not color, carries this). Current data (1.84M max) lands on 3M.
- */
-function viewsCeiling(max: number): number {
-  if (max <= 0) return 1;
-  const target = max * 1.6;
-  const magnitude = 10 ** Math.floor(Math.log10(target));
-  const normalized = target / magnitude;
-  for (const step of [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10]) {
-    if (normalized <= step) return step * magnitude;
-  }
-  return 10 * magnitude;
-}
-
 const chartConfig = {
-  views: {
-    label: "Views",
+  impressions: {
+    label: "Impressions",
     color: NAIJA,
   },
   clicks: {
@@ -137,335 +141,244 @@ export function DeliveryTooltipContent({
   );
 }
 
-type MobileTab = "impressions" | "clicks" | "ctr";
+type MobileSingle = "impressions" | "clicks" | "ctr";
 
-const TABS: { id: MobileTab; label: string }[] = [
-  { id: "impressions", label: "Impressions" },
-  { id: "clicks", label: "Clicks" },
-  { id: "ctr", label: "CTR" },
+const MOBILE_SINGLE: { id: MobileSingle; label: string }[] = [
+  { id: "impressions", label: METRIC_LABELS.impressions },
+  { id: "clicks", label: METRIC_LABELS.clicks },
+  { id: "ctr", label: METRIC_LABELS.ctr },
 ];
-
-type DesktopMetric = "combo" | MobileTab;
-
-const DESKTOP_METRICS: { id: DesktopMetric; label: string }[] = [
-  { id: "combo", label: "Combo" },
-  { id: "impressions", label: "Impressions" },
-  { id: "clicks", label: "Clicks" },
-  { id: "ctr", label: "CTR" },
-];
-
-interface RangeOption {
-  value: number | "all";
-  label: string;
-}
-
-/**
- * Time ranges slice the backend series — they never re-bucket it. Daily
- * series get day windows; monthly series get period windows so a 6-month
- * series still offers a real choice (Last 3 / All) instead of four identical
- * buttons. A single option means no control renders.
- */
-function rangeOptions(total: number, grain: "daily" | "monthly"): RangeOption[] {
-  if (grain === "daily") {
-    const options: RangeOption[] = [];
-    if (total > 7) options.push({ value: 7, label: "7D" });
-    if (total > 30) options.push({ value: 30, label: "30D" });
-    if (total > 90) options.push({ value: 90, label: "90D" });
-    options.push({ value: "all", label: total > 1 ? `All (${total})` : "All" });
-    return options;
-  }
-  const options: RangeOption[] = [];
-  if (total > 3) options.push({ value: 3, label: "Last 3" });
-  if (total > 6) options.push({ value: 6, label: "Last 6" });
-  options.push({ value: "all", label: total > 1 ? `All (${total})` : "All" });
-  return options;
-}
 
 const AXIS_TICK = { fontSize: 11, fill: MUTED };
 const AXIS_TITLE = { fontSize: 11, fontWeight: 700, fill: MUTED } as const;
 
 /**
- * Delivery chart on the shadcn chart pattern (recharts + Card): desktop gets
+ * Pure delivery renderer on the shadcn chart pattern (recharts): desktop gets
  * a bars-and-line combo — view bars on the left axis, CTR line on the right —
- * and small screens get tabbed single-series bar/line charts. Raw clicks
- * (~2% of views) live in the tooltip, never as same-axis bars. Display-only:
- * every number arrives backend-computed (AGENTS.md §6.1).
+ * and small screens get one metric at a time. Raw clicks (~2% of views) live
+ * in the tooltip, never as same-axis bars. Display-only: every number arrives
+ * backend-computed (AGENTS.md §6.1), already windowed to the requested range —
+ * this component never slices or re-buckets. Toolbar, legend and empty state
+ * belong to DeliveryChartSection.
  */
-export function DeliveryChart({ data, title, grain = "monthly" }: DeliveryChartProps) {
-  const options = rangeOptions(data.length, grain);
-  const [range, setRange] = useState<number | "all">("all");
-  const [metric, setMetric] = useState<DesktopMetric>("combo");
-  const [tab, setTab] = useState<MobileTab>("impressions");
+export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
+  // Combo on a narrow screen falls back to one metric at a time: the dual
+  // axes get cramped there, and the inner tabs pick which single series.
+  const [mobileSingle, setMobileSingle] = useState<MobileSingle>("impressions");
+  const mobileMetric: MobileSingle = metric === "combo" ? mobileSingle : metric;
 
-  const ranged = range === "all" ? data : data.slice(-range);
-  const visible = ranged.slice(-MAX_POINTS);
+  if (data.length === 0) return null;
 
-  if (visible.length === 0) return null;
-
-  const rows: ChartRow[] = visible.map((d) => ({
+  const rows: ChartRow[] = data.map((d) => ({
     label: d.label,
     views: d.impressions,
     clicks: d.clicks,
     ctr: d.impressions > 0 ? d.clicks / d.impressions : 0,
   }));
-  const maxCtr = ctrCeiling(rows.map((r) => r.ctr));
-  const viewsMax = viewsCeiling(Math.max(0, ...rows.map((r) => r.views)));
-  const clicksMax = viewsCeiling(Math.max(0, ...rows.map((r) => r.clicks)));
-  const summary = visible
+  const maxCtr = ctrAxis(Math.max(0, ...rows.map((r) => r.ctr)));
+  const viewsAxis = barAxis(Math.max(0, ...rows.map((r) => r.views)));
+  const clicksAxis = barAxis(Math.max(0, ...rows.map((r) => r.clicks)));
+  const summary = data
     .map((d) => `${d.label}: ${formatCount(d.impressions)} impressions, ${formatCTR(d.clicks, d.impressions)} CTR`)
     .join(", ");
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <CardTitle>{title}</CardTitle>
-          {/* Desktop metric switch: plain buttons with aria-pressed so they
-              never collide with the mobile tablist roles below. */}
-          <div role="group" aria-label="Chart metric" className="hidden items-center gap-1 rounded-lg bg-cloud p-1 sm:flex">
-            {DESKTOP_METRICS.map((m) => (
+    <figure aria-label={`${title}. ${summary}`}>
+      {/* Desktop charts */}
+      <div className="hidden sm:block">
+        {metric === "combo" && (
+          <ChartContainer config={chartConfig} className="h-[300px]">
+            <ComposedChart accessibilityLayer data={rows} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
+              {/* Dual axes are named ("views"/"ctr"), and the grid defaults to
+                  axis 0 — point it at the left axis or it falls back to the
+                  plot edges. Both axes share tick positions, so one set of
+                  lines serves both. */}
+              <CartesianGrid vertical={false} stroke={MIST} yAxisId="views" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
+              <YAxis
+                yAxisId="views"
+                orientation="left"
+                width={52}
+                domain={[0, viewsAxis.max]}
+                ticks={viewsAxis.ticks}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => compact.format(v)}
+                tick={AXIS_TICK}
+                label={{ value: "Views", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
+              />
+              <YAxis
+                yAxisId="ctr"
+                orientation="right"
+                width={52}
+                domain={[0, maxCtr.max]}
+                ticks={maxCtr.ticks}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={pctTick}
+                tick={AXIS_TICK}
+                label={{ value: "CTR %", angle: 90, position: "insideRight", offset: 6, style: AXIS_TITLE }}
+              />
+              <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
+              <Bar yAxisId="views" dataKey="views" name="Views" fill="var(--color-views)" radius={4} maxBarSize={46} />
+              <Line
+                yAxisId="ctr"
+                dataKey="ctr"
+                name="CTR"
+                type="linear"
+                stroke="var(--color-ctr)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5, fill: GOLD, stroke: "#fff", strokeWidth: 2 }}
+              />
+            </ComposedChart>
+          </ChartContainer>
+        )}
+        {(metric === "impressions" || metric === "clicks") && (
+          <ChartContainer config={chartConfig} className="h-[300px]">
+            <BarChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke={MIST} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
+              <YAxis
+                width={52}
+                domain={[0, (metric === "clicks" ? clicksAxis : viewsAxis).max]}
+                ticks={(metric === "clicks" ? clicksAxis : viewsAxis).ticks}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: number) => compact.format(v)}
+                tick={AXIS_TICK}
+                label={{
+                  value: metric === "clicks" ? "Clicks" : "Views",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: 6,
+                  style: AXIS_TITLE,
+                }}
+              />
+              <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
+              <Bar
+                dataKey={metric === "clicks" ? "clicks" : "views"}
+                name={metric === "clicks" ? "Clicks" : "Views"}
+                fill={metric === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
+                radius={4}
+                maxBarSize={46}
+              />
+            </BarChart>
+          </ChartContainer>
+        )}
+        {metric === "ctr" && (
+          <ChartContainer config={chartConfig} className="h-[300px]">
+            <LineChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke={MIST} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
+              <YAxis
+                width={52}
+                domain={[0, maxCtr.max]}
+                ticks={maxCtr.ticks}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={pctTick}
+                tick={AXIS_TICK}
+                label={{ value: "CTR %", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
+              />
+              <ChartTooltip cursor={{ stroke: MIST }} content={<DeliveryTooltipContent />} />
+              <Line
+                dataKey="ctr"
+                name="CTR"
+                type="linear"
+                stroke="var(--color-ctr)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 5, fill: "var(--color-ctr)", stroke: "#fff", strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ChartContainer>
+        )}
+      </div>
+
+      {/* Small screens: one metric at a time */}
+      <div className="sm:hidden">
+        {metric === "combo" && (
+          <div role="tablist" aria-label="Mobile chart metric" className="grid grid-cols-3 gap-1 rounded-lg bg-cloud p-1">
+            {MOBILE_SINGLE.map((t) => (
               <button
-                key={m.id}
-                type="button"
-                aria-pressed={metric === m.id}
-                onClick={() => setMetric(m.id)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija ${
-                  metric === m.id ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"
+                key={t.id}
+                role="tab"
+                id={`delivery-tab-${t.id}`}
+                aria-selected={mobileSingle === t.id}
+                aria-controls="delivery-panel"
+                onClick={() => setMobileSingle(t.id)}
+                className={`min-h-[44px] rounded-md px-3 py-2 text-sm font-medium ${
+                  mobileSingle === t.id ? "bg-white text-ink shadow-sm" : "text-muted"
                 }`}
               >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {options.length > 1 && (
-          <div role="group" aria-label="Time range" className="flex flex-wrap items-center gap-1">
-            {options.map((o) => (
-              <button
-                key={o.label}
-                type="button"
-                aria-pressed={range === o.value}
-                onClick={() => setRange(o.value)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija ${
-                  range === o.value ? "bg-forest text-white" : "text-muted hover:bg-cloud hover:text-ink"
-                }`}
-              >
-                {o.label}
+                {t.label}
               </button>
             ))}
           </div>
         )}
-      </CardHeader>
-      <CardContent>
-        <figure aria-label={`${title}. ${summary}`}>
-          <figcaption className="mb-3 hidden flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted sm:flex">
-            {metric !== "clicks" && metric !== "ctr" && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-naija" aria-hidden="true" />
-                Views
-              </span>
-            )}
-            {metric === "clicks" && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-naija" aria-hidden="true" />
-                Clicks
-              </span>
-            )}
-            {(metric === "combo" || metric === "ctr") && (
-              <span className="flex items-center gap-1.5">
-                <svg width="18" height="8" aria-hidden="true" className="shrink-0">
-                  <line x1="0" y1="4" x2="18" y2="4" stroke={GOLD} strokeWidth="3" strokeLinecap="round" />
-                  <circle cx="9" cy="4" r="3" fill={GOLD} />
-                </svg>
-                CTR %
-              </span>
-            )}
-          </figcaption>
-
-          {/* Desktop charts */}
-          <div className="hidden sm:block">
-            {metric === "combo" && (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <ComposedChart accessibilityLayer data={rows} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
-                  <CartesianGrid vertical={false} stroke={MIST} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
-                  <YAxis
-                    yAxisId="views"
-                    orientation="left"
-                    width={52}
-                    domain={[0, viewsMax]}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v: number) => compact.format(v)}
-                    tick={AXIS_TICK}
-                    label={{ value: "Views", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
-                  />
-                  <YAxis
-                    yAxisId="ctr"
-                    orientation="right"
-                    width={52}
-                    domain={[0, maxCtr]}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={pctTick}
-                    tick={AXIS_TICK}
-                    label={{ value: "CTR %", angle: 90, position: "insideRight", offset: 6, style: AXIS_TITLE }}
-                  />
-                  <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
-                  <Bar yAxisId="views" dataKey="views" name="Views" fill="var(--color-views)" radius={4} maxBarSize={46} />
-                  <Line
-                    yAxisId="ctr"
-                    dataKey="ctr"
-                    name="CTR"
-                    type="monotone"
-                    stroke="var(--color-ctr)"
-                    strokeWidth={3}
-                    dot={{ fill: GOLD, r: 3.5 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </ComposedChart>
-              </ChartContainer>
-            )}
-            {(metric === "impressions" || metric === "clicks") && (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <BarChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                  <CartesianGrid vertical={false} stroke={MIST} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
-                  <YAxis
-                    width={52}
-                    domain={[0, metric === "clicks" ? clicksMax : viewsMax]}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v: number) => compact.format(v)}
-                    tick={AXIS_TICK}
-                    label={{
-                      value: metric === "clicks" ? "Clicks" : "Views",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 6,
-                      style: AXIS_TITLE,
-                    }}
-                  />
-                  <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
-                  <Bar
-                    dataKey={metric === "clicks" ? "clicks" : "views"}
-                    name={metric === "clicks" ? "Clicks" : "Views"}
-                    fill={metric === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
-                    radius={4}
-                    maxBarSize={46}
-                  />
-                </BarChart>
-              </ChartContainer>
-            )}
-            {metric === "ctr" && (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <LineChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                  <CartesianGrid vertical={false} stroke={MIST} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
-                  <YAxis
-                    width={52}
-                    domain={[0, maxCtr]}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={pctTick}
-                    tick={AXIS_TICK}
-                    label={{ value: "CTR %", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
-                  />
-                  <ChartTooltip cursor={{ stroke: MIST }} content={<DeliveryTooltipContent />} />
-                  <Line
-                    dataKey="ctr"
-                    name="CTR"
-                    type="monotone"
-                    stroke="var(--color-ctr)"
-                    strokeWidth={3}
-                    dot={{ fill: "var(--color-ctr)" }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ChartContainer>
-            )}
-          </div>
-
-          {/* Small screens: one metric at a time */}
-          <div className="sm:hidden">
-            <div role="tablist" aria-label="Delivery metric" className="grid grid-cols-3 gap-1 rounded-lg bg-cloud p-1">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  role="tab"
-                  id={`delivery-tab-${t.id}`}
-                  aria-selected={tab === t.id}
-                  aria-controls="delivery-panel"
-                  onClick={() => setTab(t.id)}
-                  className={`min-h-[44px] rounded-md px-3 py-2 text-sm font-medium ${
-                    tab === t.id ? "bg-white text-ink shadow-sm" : "text-muted"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div role="tabpanel" id="delivery-panel" aria-labelledby={`delivery-tab-${tab}`} className="mt-3">
-              {tab === "ctr" ? (
-                <ChartContainer config={chartConfig} className="h-[250px]">
-                  <LineChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke={MIST} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
-                    <YAxis
-                      width={52}
-                      domain={[0, maxCtr]}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={pctTick}
-                      tick={AXIS_TICK}
-                      label={{ value: "CTR %", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
-                    />
-                    <ChartTooltip cursor={{ stroke: MIST }} content={<DeliveryTooltipContent />} />
-                    <Line
-                      dataKey="ctr"
-                      name="CTR"
-                      type="monotone"
-                      stroke="var(--color-ctr)"
-                      strokeWidth={3}
-                      dot={{ fill: "var(--color-ctr)" }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ChartContainer>
-              ) : (
-                <ChartContainer config={chartConfig} className="h-[250px]">
-                  <BarChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke={MIST} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
-                    <YAxis
-                      width={52}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v: number) => compact.format(v)}
-                      tick={AXIS_TICK}
-                      label={{
-                        value: tab === "clicks" ? "Clicks" : "Views",
-                        angle: -90,
-                        position: "insideLeft",
-                        offset: 6,
-                        style: AXIS_TITLE,
-                      }}
-                    />
-                    <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
-                    <Bar
-                      dataKey={tab === "clicks" ? "clicks" : "views"}
-                      name={tab === "clicks" ? "Clicks" : "Views"}
-                      fill={tab === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
-                      radius={6}
-                      maxBarSize={18}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              )}
-            </div>
-          </div>
-        </figure>
-      </CardContent>
-    </Card>
+        <div role="tabpanel" id="delivery-panel" aria-labelledby={`delivery-tab-${mobileMetric}`} className="mt-3">
+          {mobileMetric === "ctr" ? (
+            <ChartContainer config={chartConfig} className="h-[250px]">
+              <LineChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke={MIST} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
+                <YAxis
+                  width={52}
+                  domain={[0, maxCtr.max]}
+                  ticks={maxCtr.ticks}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={pctTick}
+                  tick={AXIS_TICK}
+                  label={{ value: "CTR %", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
+                />
+                <ChartTooltip cursor={{ stroke: MIST }} content={<DeliveryTooltipContent />} />
+                <Line
+                  dataKey="ctr"
+                  name="CTR"
+                  type="linear"
+                  stroke="var(--color-ctr)"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 5, fill: "var(--color-ctr)", stroke: "#fff", strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-[250px]">
+              <BarChart accessibilityLayer data={rows} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke={MIST} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
+                <YAxis
+                  width={52}
+                  domain={[0, (mobileMetric === "clicks" ? clicksAxis : viewsAxis).max]}
+                  ticks={(mobileMetric === "clicks" ? clicksAxis : viewsAxis).ticks}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: number) => compact.format(v)}
+                  tick={AXIS_TICK}
+                  label={{
+                    value: mobileMetric === "clicks" ? "Clicks" : "Views",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 6,
+                    style: AXIS_TITLE,
+                  }}
+                />
+                <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
+                <Bar
+                  dataKey={mobileMetric === "clicks" ? "clicks" : "views"}
+                  name={mobileMetric === "clicks" ? "Clicks" : "Views"}
+                  fill={mobileMetric === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
+                  radius={6}
+                  maxBarSize={18}
+                />
+              </BarChart>
+            </ChartContainer>
+          )}
+        </div>
+      </div>
+    </figure>
   );
 }
