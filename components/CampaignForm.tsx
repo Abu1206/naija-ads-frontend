@@ -7,11 +7,12 @@ import { apiFetch } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { nairaInputToKobo } from "@/lib/format";
 import type { AdType, ApiError, Campaign, CampaignObjective, Creative } from "@/lib/types";
+import { AD_TYPES } from "@/lib/types";
 
 const schema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
   objective: z.enum(["impressions", "clicks"]),
-  ad_type: z.enum(["banner", "interstitial", "rewarded"]),
+  ad_type: z.enum(AD_TYPES),
   total_budget_naira: z.coerce.number().positive("Total budget must be greater than zero."),
   daily_budget_naira: z.coerce.number().positive("Daily budget must be greater than zero."),
   destination_url: z.union([z.literal(""), z.url("Destination URL must be a full URL.")]),
@@ -127,6 +128,7 @@ export function CampaignForm({
             <option value="banner">Banner</option>
             <option value="interstitial">Interstitial</option>
             <option value="rewarded">Rewarded video</option>
+            <option value="audio">Audio</option>
           </select>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
 import type { AnalyticsSummary, DeveloperEarning, Payout } from "@/lib/types";
+import { AD_TYPES } from "@/lib/types";
 
 /**
  * Developer dashboard home — spec §22: app, impressions, fill rate, estimated
@@ -56,8 +57,8 @@ export default async function DeveloperOverviewPage() {
 
       <section className="rounded-xl border bg-white p-5">
         <h2 className="mb-4 font-semibold">Revenue by format</h2>
-        <dl className="grid gap-4 sm:grid-cols-3">
-          {(["banner", "interstitial", "rewarded"] as const).map((format) => (
+        <dl className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {AD_TYPES.map((format) => (
             <div key={format} className="rounded-lg border p-4">
               <dt className="text-xs font-medium uppercase tracking-wide text-gray-500 capitalize">
                 {format}
