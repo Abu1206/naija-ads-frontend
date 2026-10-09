@@ -110,20 +110,20 @@ export default async function AdminOverviewPage() {
           <Link
             key={queue.href}
             href={queue.href}
-            className="flex gap-4 rounded-xl border bg-white p-5 hover:border-brand"
+            className="flex gap-4 rounded-card border border-mist bg-white p-5 hover:border-naija"
           >
-            <span className="h-fit rounded-lg bg-gray-100 p-2 text-brand">
+            <span className="h-fit rounded-lg bg-mint p-2 text-pine">
               <Icon name={queue.icon} />
             </span>
             <span>
-              <span className="block font-semibold">{queue.title}</span>
-              <span className="mt-1 block text-sm text-gray-500">{queue.body}</span>
+              <span className="block font-display font-semibold text-ink">{queue.title}</span>
+              <span className="mt-1 block text-sm text-muted">{queue.body}</span>
             </span>
           </Link>
         ))}
       </section>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         Queue counts and network totals are not shown: the <code>/api/v1/admin</code> family (spec
         §23) has no documented aggregate endpoint, and lengthening a page of list results would
         report a page size as a network size.

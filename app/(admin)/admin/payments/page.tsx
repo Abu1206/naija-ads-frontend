@@ -46,7 +46,7 @@ export default async function AdminPaymentsPage() {
         />
       </div>
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         A payment stays <code>pending</code> until the Bachs webhook confirms it server-side; the
         redirect back to this dashboard is not a credit (spec §16.3).
       </p>
@@ -78,7 +78,7 @@ export default async function AdminPaymentsPage() {
             header: "Decision",
             render: (p) =>
               p.status === "paid" || p.status === "rejected" ? (
-                <span className="text-xs text-gray-500">Closed</span>
+                <span className="text-xs text-muted">Closed</span>
               ) : (
                 <ReviewDecision kind="payout" id={p.id} />
               ),
