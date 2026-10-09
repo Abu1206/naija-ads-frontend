@@ -35,6 +35,7 @@ import type {
   Payout,
   Placement,
 } from "@/lib/types";
+import { generateDailySeries, type MockSeriesPoint } from "./series";
 
 /** The signed-in business in the fixture. Mirrors what the backend would scope to. */
 export const CURRENT_BUSINESS_ID = "biz_acme_foods";
@@ -1205,6 +1206,7 @@ const businessSeries = [
   { period: "2026-09", impressions: 1080000, clicks: 34000 },
   { period: "2026-10", impressions: 1172900, clicks: 37200 },
 ];
+export { businessSeries };
 
 const developerSeries = [
   { period: "2026-05", impressions: 380000, clicks: 5800 },
@@ -1214,6 +1216,16 @@ const developerSeries = [
   { period: "2026-09", impressions: 760000, clicks: 11400 },
   { period: "2026-10", impressions: 819000, clicks: 11200 },
 ];
+export { developerSeries };
+
+/**
+ * Daily fixture history behind the 7D/30D/90D ranges. Seeded and anchored to
+ * recent monthly run-rates (~37k/day business, ~26k/day developer) with growth
+ * and a weekend dip — recent days, not averages, because the chart windows
+ * slice the tail. Weekly buckets for 90D derive from these in store.ts.
+ */
+export const businessDaily: MockSeriesPoint[] = generateDailySeries(11, 41000, 0.0325);
+export const developerDaily: MockSeriesPoint[] = generateDailySeries(77, 30000, 0.0147);
 
 /**
  * Business (demand) and developer (supply) analytics. The admin overview reads
