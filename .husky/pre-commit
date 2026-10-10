@@ -1,0 +1,70 @@
+#!/bin/sh
+# .husky/pre-commit — author allowlist + secret scanner + lint-staged
+# Uses /bin/sh (POSIX sh via Git for Windows) to avoid WSL2 bash conflicts.
+
+# ── 1. Author allowlist ────────────────────────────────────────────────────
+ALLOWED_EMAILS="
+121524180+Abu1206@users.noreply.github.com
+harliarmeen@gmail.com
+fawassaka862@gmail.com
+"
+
+AUTHOR_EMAIL=$(git config user.email 2>/dev/null || echo "")
+
+IS_ALLOWED=false
+for EMAIL in $ALLOWED_EMAILS; do
+  if [ "$AUTHOR_EMAIL" = "$EMAIL" ]; then
+    IS_ALLOWED=true
+    break
+  fi
+done
+
+if [ "$IS_ALLOWED" = "false" ]; then
+  echo ""
+  echo "  X COMMIT REJECTED -- author email is not on the allowlist."
+  echo ""
+  echo "  Your current git identity: '$AUTHOR_EMAIL'"
+  echo "  Fix with: git config user.email <your-approved-email>"
+  echo ""
+  echo "  Approved contributors:"
+  for EMAIL in $ALLOWED_EMAILS; do
+    echo "    - $EMAIL"
+  done
+  echo ""
+  exit 1
+fi
+
+# ── 2. Secret / credential leak detection ─────────────────────────────────
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|env|json|yaml|yml)$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+  DIFF=$(git diff --cached -U0 -- $STAGED_FILES | grep '^\+' | grep -v '^\+\+\+' || true)
+
+  check_pattern() {
+    LABEL="$1"
+    PATTERN="$2"
+    if echo "$DIFF" | grep -qiE "$PATTERN"; then
+      echo "  X COMMIT REJECTED -- possible secret detected: $LABEL"
+      FOUND_SECRET=true
+    fi
+  }
+
+  FOUND_SECRET=false
+  check_pattern "AWS Access Key"             'AKIA[0-9A-Z]{16}'
+  check_pattern "Google API Key"             'AIza[0-9A-Za-z\-_]{35}'
+  check_pattern "GitHub PAT"                 'ghp_[0-9a-zA-Z]{36}'
+  check_pattern "GitHub App Token"           'ghs_[0-9a-zA-Z]{36}'
+  check_pattern "OpenAI/Stripe secret key"   'sk-[a-zA-Z0-9]{32,}'
+  check_pattern "Bachs API key"              'bachs_[a-zA-Z0-9_\-]{20,}'
+  check_pattern "Private key header"         'BEGIN (RSA|EC|OPENSSH) PRIVATE KEY'
+
+  if [ "$FOUND_SECRET" = "true" ]; then
+    echo ""
+    echo "  Use environment variables and .env.example for key names only."
+    echo ""
+    exit 1
+  fi
+fi
+
+# ── 3. lint-staged (ESLint + Prettier on staged app/components/lib files) ─
+pnpm exec lint-staged

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# .husky/pre-push — run typecheck + vitest before any push
+# Emergency bypass: git push --no-verify (requires written justification in PR description)
+set -euo pipefail
+
+REMOTE="$1"
+URL="$2"
+
+echo ""
+echo "  Running typecheck + tests before push to $REMOTE ($URL)..."
+echo ""
+
+echo "  [1/2] pnpm typecheck..."
+if ! pnpm typecheck 2>&1; then
+  echo ""
+  echo "  X PUSH REJECTED -- TypeScript errors found. Run: pnpm typecheck"
+  echo ""
+  exit 1
+fi
+
+echo "  [2/2] pnpm test..."
+if ! pnpm test 2>&1; then
+  echo ""
+  echo "  X PUSH REJECTED -- Tests failed. Run: pnpm test"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "  All checks passed. Push proceeding."

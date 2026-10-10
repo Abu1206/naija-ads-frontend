@@ -1,0 +1,27 @@
+# naija-ads-frontend — line ending rules
+* text=auto eol=lf
+
+# Source files — always LF
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.css   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+*.env.* text eol=lf
+
+# Husky hooks — MUST be LF or bash will fail on Linux/macOS
+.husky/* text eol=lf
+
+# Binary files — do not mangle
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.svg   binary
+*.pdf   binary
+*.zip   binary
