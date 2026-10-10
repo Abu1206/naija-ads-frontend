@@ -3,9 +3,9 @@ import { PageHeader } from "@/components/DashboardShell";
 import { Button } from "@/components/Button";
 import { DataTable } from "@/components/DataTable";
 import { FundForm } from "@/components/FundForm";
-import { MetricCard } from "@/components/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { WalletCard } from "@/components/WalletCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { formatDate, formatKobo } from "@/lib/format";
@@ -23,7 +23,16 @@ export default async function BillingPage() {
     <div className="space-y-6">
       <PageHeader title="Billing" subtitle="Fund your account and audit every credit and debit." />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {analytics.error && (
+        <p role="alert" className="rounded-lg border border-alert/30 bg-blush p-4 text-center text-sm text-alert">
+          {analytics.error}
+        </p>
+      )}
+
+      {/* A matching pair: the wallet card and its lifetime twin share the same
+          frame, label, numeral and hint line — the only difference is the
+          wallet's funding action. */}
+      <div className="grid items-stretch gap-4 lg:grid-cols-2">
         <WalletCard
           label="Remaining budget"
           balance={analytics.data ? formatKobo(analytics.data.remaining_budget_kobo) : "—"}
@@ -34,37 +43,41 @@ export default async function BillingPage() {
             </Link>
           }
         />
-        <MetricCard
+        <WalletCard
           label="Total spend"
-          value={analytics.data ? formatKobo(analytics.data.spend_kobo) : "—"}
-          icon="campaigns"
-          tone="money"
-          error={analytics.error}
+          balance={analytics.data ? formatKobo(analytics.data.spend_kobo) : "—"}
+          hint="Lifetime across all campaigns. Every kobo is on the ledger below."
         />
       </div>
 
-      <section id="add-funds" className="rounded-card border border-mist bg-white p-5 scroll-mt-4">
-        <h2 className="mb-1 font-display font-semibold text-ink">Add funds</h2>
-        <p className="mb-4 text-sm text-muted">
-          You will be redirected to a Bachs checkout created by the backend. Your balance updates
-          when the webhook confirms the payment, never from the redirect alone.
-        </p>
-        <FundForm />
-      </section>
+      {/* Funding form beside its ledger: a lone narrow card left a dead void
+          across half the page on wide screens. */}
+      <div className="grid items-start gap-4 lg:grid-cols-5">
+        <Card id="add-funds" className="scroll-mt-4 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Add funds</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <FundForm />
+          </CardContent>
+        </Card>
 
-      <DataTable<Payment>
-        title="Payments"
-        columns={[
-          { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
-          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
-          { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
-          { key: "created", header: "Created", render: (p) => formatDate(p.created_at) },
-        ]}
-        rows={payments.data ?? []}
-        error={payments.error}
-        emptyMessage="No funding attempts yet."
-        getRowKey={(p) => p.id}
-      />
+        <div className="lg:col-span-3">
+          <DataTable<Payment>
+            title="Payments"
+            columns={[
+              { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
+              { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
+              { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
+              { key: "created", header: "Created", render: (p) => formatDate(p.created_at) },
+            ]}
+            rows={payments.data ?? []}
+            error={payments.error}
+            emptyMessage="No funding attempts yet."
+            getRowKey={(p) => p.id}
+          />
+        </div>
+      </div>
     </div>
   );
 }
