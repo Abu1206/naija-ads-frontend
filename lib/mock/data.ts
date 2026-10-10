@@ -14,10 +14,10 @@
 // - `businessAnalytics` top-level impressions/clicks/spend/remaining are the
 //   sums across CURRENT_BUSINESS_ID campaigns; `by_format` groups those same
 //   rows by `ad_type`; `series` is the monthly split that sums to the totals.
-// - Ranged reads (`?range=…`) scope impressions/clicks to the returned series
-//   — the mock mirrors a backend that scopes totals by range — while
-//   remaining (a now-balance), spend and by_format stay all-time. The KPI
-//   tiles therefore always agree with the chart on every range.
+// - Ranged reads (`?range=…`) scope impressions/clicks/spend to the returned
+//   series — the mock mirrors a backend that scopes totals by range — while
+//   remaining (a now-balance) and by_format stay all-time. The KPI tiles
+//   therefore always agree with the chart on every range.
 // - `developerAnalytics` mirrors that for CURRENT_DEVELOPER_ID earnings:
 //   impressions/revenue are the earnings sums, `filled = impressions`,
 //   `by_format` groups earnings, `series` sums to the totals.
@@ -39,7 +39,7 @@ import type {
   Payout,
   Placement,
 } from "@/lib/types";
-import { generateDailySeries, type MockSeriesPoint } from "./series";
+import { generateDailySeries, generateDailySpend, type MockSeriesPoint } from "./series";
 
 /** The signed-in business in the fixture. Mirrors what the backend would scope to. */
 export const CURRENT_BUSINESS_ID = "biz_acme_foods";
@@ -1234,13 +1234,23 @@ export const businessDaily: MockSeriesPoint[] = generateDailySeries(11, 41000, 0
 export const developerDaily: MockSeriesPoint[] = generateDailySeries(77, 30000, 0.0147);
 
 /**
+ * Daily spend behind the business ranges, aligned with `businessDaily` and
+ * summing exactly to the ₦13,345,000.00 lifetime spend. Ranged reads slice
+ * this the way they slice counts; `by_format` and the campaign rows stay
+ * lifetime (no per-format or per-campaign attribution in the fixtures).
+ */
+export const businessSpendDaily: number[] = generateDailySpend(29, businessDaily, 1334500000);
+
+/**
  * Business (demand) and developer (supply) analytics. The admin overview reads
  * both scopes because spec §23 defines no `scope=admin`.
  *
  * Acme totals: 5,172,900 impressions, 168,200 clicks (3.25% CTR),
  * ₦13,345,000.00 spent of ₦15,500,000.00 funded (86.1% used), leaving
  * ₦2,155,000.00 — past the low-balance line, so the overview top-up banner
- * renders. Series months sum to the totals.
+ * renders. Series months sum to the totals. Ranged reads scope impressions,
+ * clicks AND spend to the window (spend slices `businessSpendDaily`); the
+ * KPI tiles therefore agree with the chart on money as well as counts.
  */
 export const businessAnalytics: AnalyticsSummary = {
   impressions: 5172900,
