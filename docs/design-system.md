@@ -62,13 +62,15 @@ Fewer fonts also means a faster first load, which matters for people on mobile d
 
 ## Shape and space
 
-Flat and light. Table and chart panels stand alone on the Cloud page ground with no enclosing border — the white tint carries the edge. One-pixel Mist still separates what needs separating: row dividers, title rules, popovers and the nav rail. Almost no shadows, no gradients. Radius is 8 for buttons and inputs, 14 for cards, 20 for the wallet card, and a full pill for badges. Spacing runs on 4, 8, 12, 16, 24, 32 and 48.
+Flat and bordered. One pixel Mist borders around panels and cards, Mist row-dividers inside tables, almost no shadows, no gradients. Radius is 8 for buttons and inputs, 14 for cards, 20 for the wallet card, and a full pill for badges. Spacing runs on 4, 8, 12, 16, 24, 32 and 48.
 
 ## Components
 
 Buttons are at least 44 high. Primary is green with white text. Secondary is white with a green outline. Gold buttons only appear next to money (Withdraw earnings, Fund wallet). Destructive actions are outlined red, never filled. Cancel is a plain text button.
 
 Inputs are 48 high with the label above, never as a placeholder, and a short helper line underneath in Muted.
+
+Toolbar pickers (the chart's metric and range dropdowns, `components/ValuePicker.tsx`) are 44 high on the 8px input radius, showing the current value and a chevron. The open menu is a 14px white card with a 1px Mist border, radio items with a Naija Green tick on the current value, and a Mint pill that springs to the hovered or focused row. All motion respects prefers-reduced-motion. One picker per control type in the whole app — new dropdowns use the same component, and native selects stay inside forms where a real form control is required.
 
 The wallet card is Deep Forest with a small caps label, the balance in gold, and the main action below it. It is the most recognisable object in the product.
 
