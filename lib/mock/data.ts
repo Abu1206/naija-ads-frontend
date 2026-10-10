@@ -14,6 +14,10 @@
 // - `businessAnalytics` top-level impressions/clicks/spend/remaining are the
 //   sums across CURRENT_BUSINESS_ID campaigns; `by_format` groups those same
 //   rows by `ad_type`; `series` is the monthly split that sums to the totals.
+// - Ranged reads (`?range=…`) scope impressions/clicks to the returned series
+//   — the mock mirrors a backend that scopes totals by range — while
+//   remaining (a now-balance), spend and by_format stay all-time. The KPI
+//   tiles therefore always agree with the chart on every range.
 // - `developerAnalytics` mirrors that for CURRENT_DEVELOPER_ID earnings:
 //   impressions/revenue are the earnings sums, `filled = impressions`,
 //   `by_format` groups earnings, `series` sums to the totals.
@@ -141,10 +145,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "active",
     ad_type: "banner",
-    total_budget_kobo: 500000000,
+    total_budget_kobo: 233936187,
     daily_budget_kobo: 1500000,
     spend_kobo: 214500000,
-    remaining_budget_kobo: 285500000,
+    remaining_budget_kobo: 19436187,
     impressions: 1842000,
     clicks: 46100,
     destination_url: "https://acme.ng/indomie",
@@ -157,10 +161,10 @@ export const campaigns: Campaign[] = [
     objective: "clicks",
     status: "active",
     ad_type: "rewarded",
-    total_budget_kobo: 750000000,
+    total_budget_kobo: 425970621,
     daily_budget_kobo: 2500000,
     spend_kobo: 402300000,
-    remaining_budget_kobo: 347700000,
+    remaining_budget_kobo: 23670621,
     impressions: 620400,
     clicks: 41800,
     destination_url: "https://acme.ng/rewarded",
@@ -173,10 +177,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "active",
     ad_type: "audio",
-    total_budget_kobo: 300000000,
+    total_budget_kobo: 140361712,
     daily_budget_kobo: 900000,
     spend_kobo: 128700000,
-    remaining_budget_kobo: 171300000,
+    remaining_budget_kobo: 11661712,
     impressions: 412000,
     clicks: 3100,
     destination_url: "https://acme.ng/chivita",
@@ -189,10 +193,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "paused",
     ad_type: "interstitial",
-    total_budget_kobo: 400000000,
+    total_budget_kobo: 118559469,
     daily_budget_kobo: 1200000,
     spend_kobo: 98000000,
-    remaining_budget_kobo: 302000000,
+    remaining_budget_kobo: 20559469,
     impressions: 388000,
     clicks: 12400,
     destination_url: "https://acme.ng/peak",
@@ -205,10 +209,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "active",
     ad_type: "banner",
-    total_budget_kobo: 350000000,
+    total_budget_kobo: 198469436,
     daily_budget_kobo: 1100000,
     spend_kobo: 187400000,
-    remaining_budget_kobo: 162600000,
+    remaining_budget_kobo: 11069436,
     impressions: 940000,
     clicks: 28700,
     destination_url: "https://acme.ng/gala",
@@ -221,10 +225,10 @@ export const campaigns: Campaign[] = [
     objective: "clicks",
     status: "active",
     ad_type: "rewarded",
-    total_budget_kobo: 420000000,
+    total_budget_kobo: 118243563,
     daily_budget_kobo: 1400000,
     spend_kobo: 96200000,
-    remaining_budget_kobo: 323800000,
+    remaining_budget_kobo: 22043563,
     impressions: 310500,
     clicks: 19400,
     destination_url: "https://acme.ng/minimie",
@@ -237,10 +241,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "paused",
     ad_type: "audio",
-    total_budget_kobo: 220000000,
+    total_budget_kobo: 75365661,
     daily_budget_kobo: 800000,
     spend_kobo: 64800000,
-    remaining_budget_kobo: 155200000,
+    remaining_budget_kobo: 10565661,
     impressions: 205000,
     clicks: 1900,
     destination_url: "https://acme.ng/hollandia",
@@ -253,10 +257,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "active",
     ad_type: "interstitial",
-    total_budget_kobo: 380000000,
+    total_budget_kobo: 158761649,
     daily_budget_kobo: 1300000,
     spend_kobo: 142600000,
-    remaining_budget_kobo: 237400000,
+    remaining_budget_kobo: 16161649,
     impressions: 455000,
     clicks: 14800,
     destination_url: "https://acme.ng/crowns",
@@ -269,10 +273,10 @@ export const campaigns: Campaign[] = [
     objective: "clicks",
     status: "draft",
     ad_type: "banner",
-    total_budget_kobo: 150000000,
+    total_budget_kobo: 10211657,
     daily_budget_kobo: 500000,
     spend_kobo: 0,
-    remaining_budget_kobo: 150000000,
+    remaining_budget_kobo: 10211657,
     impressions: 0,
     clicks: 0,
     destination_url: "https://acme.ng/cutlery",
@@ -285,10 +289,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "under_review",
     ad_type: "interstitial",
-    total_budget_kobo: 600000000,
+    total_budget_kobo: 40846629,
     daily_budget_kobo: 2000000,
     spend_kobo: 0,
-    remaining_budget_kobo: 600000000,
+    remaining_budget_kobo: 40846629,
     impressions: 0,
     clicks: 0,
     destination_url: "https://acme.ng/hamper",
@@ -301,10 +305,10 @@ export const campaigns: Campaign[] = [
     objective: "impressions",
     status: "submitted",
     ad_type: "banner",
-    total_budget_kobo: 250000000,
+    total_budget_kobo: 17019428,
     daily_budget_kobo: 800000,
     spend_kobo: 0,
-    remaining_budget_kobo: 250000000,
+    remaining_budget_kobo: 17019428,
     impressions: 0,
     clicks: 0,
     destination_url: "https://acme.ng/at-50",
@@ -317,10 +321,10 @@ export const campaigns: Campaign[] = [
     objective: "clicks",
     status: "rejected",
     ad_type: "banner",
-    total_budget_kobo: 180000000,
+    total_budget_kobo: 12253988,
     daily_budget_kobo: 600000,
     spend_kobo: 0,
-    remaining_budget_kobo: 180000000,
+    remaining_budget_kobo: 12253988,
     impressions: 0,
     clicks: 0,
     destination_url: "https://acme.ng/bigi",
@@ -766,13 +770,14 @@ export const creatives: Creative[] = [
   },
 ];
 
-// Confirmed payments fund the full ₦45,000,000 of Acme budgets
-// (500+750+300+400+150+600+350+420+220+380+250+180M).
+// Confirmed payments fund the full ₦15,500,000 of Acme budgets: the 12
+// campaign totals (spend + remaining each) sum to funded, and the ledger
+// below reconciles the same way.
 export const payments: Payment[] = [
   {
     id: "pay_005",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 800000000,
+    amount_kobo: 300000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_005",
     reference: "BACHS-1A2B3C",
@@ -781,7 +786,7 @@ export const payments: Payment[] = [
   {
     id: "pay_006",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 1200000000,
+    amount_kobo: 400000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_006",
     reference: "BACHS-4D5E6F",
@@ -790,7 +795,7 @@ export const payments: Payment[] = [
   {
     id: "pay_007",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 900000000,
+    amount_kobo: 300000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_007",
     reference: "BACHS-7G8H9J",
@@ -799,7 +804,7 @@ export const payments: Payment[] = [
   {
     id: "pay_002",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 500000000,
+    amount_kobo: 200000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_002",
     reference: "BACHS-2LM4Q7",
@@ -808,7 +813,7 @@ export const payments: Payment[] = [
   {
     id: "pay_008",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 600000000,
+    amount_kobo: 150000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_008",
     reference: "BACHS-3K9M2P",
@@ -817,7 +822,7 @@ export const payments: Payment[] = [
   {
     id: "pay_001",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 250000000,
+    amount_kobo: 100000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_001",
     reference: "BACHS-8F2K19",
@@ -826,7 +831,7 @@ export const payments: Payment[] = [
   {
     id: "pay_009",
     business_id: CURRENT_BUSINESS_ID,
-    amount_kobo: 250000000,
+    amount_kobo: 100000000,
     status: "confirmed",
     checkout_url: "https://checkout.bachs.ng/pay/pay_009",
     reference: "BACHS-6QW8ER",
@@ -888,16 +893,17 @@ export const payments: Payment[] = [
   },
 ];
 
-// Credits (7 × confirmed = ₦45,000,000) minus debits (₦13,345,000 of spend)
-// leave the ₦31,655,000 wallet remaining above.
+// Credits (7 × confirmed = ₦15,500,000) minus debits (₦13,345,000 of spend)
+// leave the ₦2,155,000 wallet remaining above — 86.1% used, past the
+// low-balance line so the overview top-up banner renders.
 export const ledger: LedgerEntry[] = [
-  { id: "led_05", account_id: "acct_acme", amount_kobo: 800000000, direction: "credit", kind: "payment", created_at: iso(2026, 5, 15) },
-  { id: "led_06", account_id: "acct_acme", amount_kobo: 1200000000, direction: "credit", kind: "payment", created_at: iso(2026, 6, 20) },
-  { id: "led_07", account_id: "acct_acme", amount_kobo: 900000000, direction: "credit", kind: "payment", created_at: iso(2026, 7, 25) },
-  { id: "led_03", account_id: "acct_acme", amount_kobo: 500000000, direction: "credit", kind: "payment", created_at: iso(2026, 8, 30) },
-  { id: "led_08", account_id: "acct_acme", amount_kobo: 600000000, direction: "credit", kind: "payment", created_at: iso(2026, 9, 5) },
-  { id: "led_01", account_id: "acct_acme", amount_kobo: 250000000, direction: "credit", kind: "payment", created_at: iso(2026, 9, 28) },
-  { id: "led_09", account_id: "acct_acme", amount_kobo: 250000000, direction: "credit", kind: "payment", created_at: iso(2026, 10, 1) },
+  { id: "led_05", account_id: "acct_acme", amount_kobo: 300000000, direction: "credit", kind: "payment", created_at: iso(2026, 5, 15) },
+  { id: "led_06", account_id: "acct_acme", amount_kobo: 400000000, direction: "credit", kind: "payment", created_at: iso(2026, 6, 20) },
+  { id: "led_07", account_id: "acct_acme", amount_kobo: 300000000, direction: "credit", kind: "payment", created_at: iso(2026, 7, 25) },
+  { id: "led_03", account_id: "acct_acme", amount_kobo: 200000000, direction: "credit", kind: "payment", created_at: iso(2026, 8, 30) },
+  { id: "led_08", account_id: "acct_acme", amount_kobo: 150000000, direction: "credit", kind: "payment", created_at: iso(2026, 9, 5) },
+  { id: "led_01", account_id: "acct_acme", amount_kobo: 100000000, direction: "credit", kind: "payment", created_at: iso(2026, 9, 28) },
+  { id: "led_09", account_id: "acct_acme", amount_kobo: 100000000, direction: "credit", kind: "payment", created_at: iso(2026, 10, 1) },
   { id: "led_d01", account_id: "acct_acme", amount_kobo: 180000000, direction: "debit", kind: "spend", created_at: iso(2026, 5, 31) },
   { id: "led_d02", account_id: "acct_acme", amount_kobo: 210000000, direction: "debit", kind: "spend", created_at: iso(2026, 6, 30) },
   { id: "led_d03", account_id: "acct_acme", amount_kobo: 240000000, direction: "debit", kind: "spend", created_at: iso(2026, 7, 31) },
@@ -1232,14 +1238,15 @@ export const developerDaily: MockSeriesPoint[] = generateDailySeries(77, 30000, 
  * both scopes because spec §23 defines no `scope=admin`.
  *
  * Acme totals: 5,172,900 impressions, 168,200 clicks (3.25% CTR),
- * ₦13,345,000.00 spent of ₦45,000,000.00 funded (29.7% used), leaving
- * ₦31,655,000.00. Series months sum to the totals.
+ * ₦13,345,000.00 spent of ₦15,500,000.00 funded (86.1% used), leaving
+ * ₦2,155,000.00 — past the low-balance line, so the overview top-up banner
+ * renders. Series months sum to the totals.
  */
 export const businessAnalytics: AnalyticsSummary = {
   impressions: 5172900,
   clicks: 168200,
   spend_kobo: 1334500000,
-  remaining_budget_kobo: 3165500000,
+  remaining_budget_kobo: 215500000,
   revenue_kobo: 0,
   ad_requests: 0,
   filled: 0,
