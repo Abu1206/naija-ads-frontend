@@ -73,6 +73,22 @@ export function generateDailySeries(
 }
 
 /**
+ * Daily spend attribution (kobo) aligned by index with a daily series: each
+ * day's weight is its impressions with seeded noise, normalized so the whole
+ * history sums exactly to the lifetime spend. Deterministic like the series
+ * itself. This is the mock doing the backend's job (AGENTS.md §4): attributing
+ * money per window so ranged reads can scope spend the way they scope counts.
+ */
+export function generateDailySpend(seed: number, daily: MockSeriesPoint[], totalKobo: number): number[] {
+  const rand = mulberry32(seed);
+  const weights = daily.map((p) => p.impressions * (0.85 + 0.3 * rand()));
+  const weightSum = weights.reduce((sum, w) => sum + w, 0);
+  const out = weights.map((w) => Math.round((w / weightSum) * totalKobo));
+  out[out.length - 1]! += totalKobo - out.reduce((sum, v) => sum + v, 0);
+  return out;
+}
+
+/**
  * Groups the trailing `weeks * 7` days into exact 7-day buckets labeled by
  * week-start date ("2026-09-28" renders as "28 Sep" via deliveryLabel). Exact
  * weeks keep every point a full 7 days — no ragged edge bucket.
