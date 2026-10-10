@@ -35,6 +35,7 @@ import {
   businessAnalytics,
   businessDaily,
   businessSeries,
+  businessSpendDaily,
   campaigns as seedCampaigns,
   creatives as seedCreatives,
   CURRENT_BUSINESS_ID,
@@ -131,11 +132,12 @@ function scopeParam(path: string): string | null {
  * Windowed series AND windowed KPI totals for the ranged chart. A ranged query
  * scopes the whole summary to the window — the way the backend scopes a ranged
  * query — so the KPI tiles always agree with the chart: totals equal the sums
- * of the returned series on every range. `remaining` stays point-in-time (a
- * balance has no window), and `spend`/`by_format` stay all-time: the fixtures
- * carry no daily spend or per-format attribution, and only the backend may
- * attribute money. Unknown or missing ranges fall back to the monthly series
- * (the pre-range behaviour), so old callers keep working.
+ * of the returned series on every range, and business spend equals the matching
+ * slice of the daily spend attribution. `remaining` stays point-in-time (a
+ * balance has no window), and `by_format` stays all-time: the fixtures carry
+ * no per-format attribution, and only the backend may attribute money.
+ * Unknown or missing ranges fall back to the monthly series (the pre-range
+ * behaviour), so old callers keep working.
  */
 function windowSums(points: MockSeriesPoint[]) {
   if (points.length === 0) return null;
@@ -143,6 +145,10 @@ function windowSums(points: MockSeriesPoint[]) {
     impressions: points.reduce((sum, p) => sum + p.impressions, 0),
     clicks: points.reduce((sum, p) => sum + p.clicks, 0),
   };
+}
+
+function spendSum(days: number[]) {
+  return days.reduce((sum, v) => sum + v, 0);
 }
 
 /** Growth the fixtures already show month to month (business ~+29%, developer ~+24%). */
@@ -176,15 +182,41 @@ function priorSixMonths(scope: "business" | "developer") {
 function priorWindow(scope: "business" | "developer", range: ChartRange) {
   if (range === "all") return null;
   const daily = scope === "developer" ? developerDaily : businessDaily;
+  if (scope === "developer") {
+    switch (range) {
+      case "7d":
+        return windowSums(daily.slice(-14, -7));
+      case "30d":
+        return windowSums(daily.slice(-60, -30));
+      case "90d":
+        return windowSums(toWeekly(daily.slice(0, 91)));
+      case "6m":
+        return priorSixMonths(scope);
+    }
+  }
+  // Business baselines carry spend alongside counts so the spend tile deltas
+  // window exactly like the impression deltas. Null when history is too short.
+  const withSpend = (points: MockSeriesPoint[], spendDays: number[]) => {
+    const totals = windowSums(points);
+    if (!totals) return null;
+    return { ...totals, spend_kobo: spendSum(spendDays) };
+  };
   switch (range) {
     case "7d":
-      return windowSums(daily.slice(-14, -7));
+      return withSpend(daily.slice(-14, -7), businessSpendDaily.slice(-14, -7));
     case "30d":
-      return windowSums(daily.slice(-60, -30));
+      return withSpend(daily.slice(-60, -30), businessSpendDaily.slice(-60, -30));
     case "90d":
-      return windowSums(toWeekly(daily.slice(0, 91)));
-    case "6m":
-      return priorSixMonths(scope);
+      return withSpend(toWeekly(daily.slice(0, 91)), businessSpendDaily.slice(0, 91));
+    case "6m": {
+      const baseline = priorSixMonths(scope);
+      // Back-projected at the fixture's own growth: the prior half-year spent
+      // in proportion to what it delivered, rounded to whole kobo.
+      const spend_kobo = Math.round(
+        (businessAnalytics.spend_kobo * baseline.impressions) / businessAnalytics.impressions,
+      );
+      return { ...baseline, spend_kobo };
+    }
   }
 }
 
@@ -201,17 +233,25 @@ function rangedAnalytics(scope: "business" | "developer", path: string) {
   // KPI tiles read these totals, so they follow the picker exactly: whatever
   // the chart draws, the cards sum to. The spread is guarded — an empty
   // series keeps the all-time base rather than zeroing the tiles.
-  const scoped = (series: MockSeriesPoint[]) => {
+  const scoped = (series: MockSeriesPoint[], spend_kobo?: number) => {
     const totals = windowSums(series);
-    return { ...base, series, previous_window, ...(totals ?? {}) };
+    return {
+      ...base,
+      series,
+      previous_window,
+      ...(totals ?? {}),
+      // Business spend windows with the series; the developer scope has no
+      // spend to window. Lifetime callers (6M, all-time) keep the base total.
+      ...(scope === "business" && spend_kobo !== undefined ? { spend_kobo } : {}),
+    };
   };
   switch (range) {
     case "7d":
-      return scoped(daily.slice(-7));
+      return scoped(daily.slice(-7), spendSum(businessSpendDaily.slice(-7)));
     case "30d":
-      return scoped(daily.slice(-30));
+      return scoped(daily.slice(-30), spendSum(businessSpendDaily.slice(-30)));
     case "90d":
-      return scoped(toWeekly(daily));
+      return scoped(toWeekly(daily), spendSum(businessSpendDaily.slice(-91)));
     case "6m":
     case "all":
       // The monthly fixtures are the whole history: totals come back to
