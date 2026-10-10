@@ -50,34 +50,28 @@ export default async function BillingPage() {
         />
       </div>
 
-      {/* Funding form beside its ledger: a lone narrow card left a dead void
-          across half the page on wide screens. */}
-      <div className="grid items-start gap-4 lg:grid-cols-5">
-        <Card id="add-funds" className="scroll-mt-4 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Add funds</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <FundForm />
-          </CardContent>
-        </Card>
+      <Card id="add-funds" className="scroll-mt-4">
+        <CardHeader>
+          <CardTitle>Add funds</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <FundForm />
+        </CardContent>
+      </Card>
 
-        <div className="lg:col-span-3">
-          <DataTable<Payment>
-            title="Payments"
-            columns={[
-              { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
-              { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
-              { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
-              { key: "created", header: "Created", render: (p) => formatDate(p.created_at) },
-            ]}
-            rows={payments.data ?? []}
-            error={payments.error}
-            emptyMessage="No funding attempts yet."
-            getRowKey={(p) => p.id}
-          />
-        </div>
-      </div>
+      <DataTable<Payment>
+        title="Payments"
+        columns={[
+          { key: "reference", header: "Reference", render: (p) => <code className="text-xs">{p.reference}</code> },
+          { key: "amount", header: "Amount", numeric: true, render: (p) => formatKobo(p.amount_kobo) },
+          { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
+          { key: "created", header: "Created", render: (p) => formatDate(p.created_at) },
+        ]}
+        rows={payments.data ?? []}
+        error={payments.error}
+        emptyMessage="No funding attempts yet."
+        getRowKey={(p) => p.id}
+      />
     </div>
   );
 }
