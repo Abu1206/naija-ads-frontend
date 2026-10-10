@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { DeliveryChartSection } from "./DeliveryChartSection";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
@@ -33,6 +33,8 @@ beforeAll(() => {
     disconnect() {}
   };
   global.ResizeObserver = MockRO as unknown as typeof ResizeObserver;
+  // Radix scrolls the highlighted item into view; jsdom has no layout to do it.
+  Element.prototype.scrollIntoView = () => {};
 });
 
 const data = [
@@ -41,7 +43,10 @@ const data = [
   { label: "8 Oct", impressions: 1104000, clicks: 28400 },
 ];
 
-function renderSection(props?: { range?: "7d" | "30d" | "90d" | "6m"; metric?: "combo" | "impressions" | "clicks" | "ctr" }) {
+function renderSection(props?: {
+  range?: "7d" | "30d" | "90d" | "6m";
+  metric?: "combo" | "impressions" | "clicks" | "ctr";
+}) {
   return render(
     <DeliveryChartSection
       data={data}
@@ -52,22 +57,48 @@ function renderSection(props?: { range?: "7d" | "30d" | "90d" | "6m"; metric?: "
   );
 }
 
+/** Radix opens the menu on Enter/Space/ArrowDown from the trigger. */
+function openMenu(label: string) {
+  const trigger = screen.getByRole("button", { name: label });
+  fireEvent.keyDown(trigger, { key: "Enter" });
+  return trigger;
+}
+
 describe("DeliveryChartSection toolbar", () => {
   it("pairs the metric dropdown with a range dropdown in one row", () => {
     renderSection();
-    // Two native selects side by side — no breakpoints, no stacking.
-    expect(screen.getByLabelText("Chart metric")).toBeInTheDocument();
-    const metric = screen.getByLabelText("Chart metric") as HTMLSelectElement;
-    expect(metric.value).toBe("combo");
-    expect([...metric.options].map((o) => o.textContent)).toEqual([
+    // Two triggers side by side — no breakpoints, no stacking.
+    for (const name of ["Chart metric", "Time range"]) {
+      expect(screen.getByRole("button", { name })).toBeInTheDocument();
+    }
+    expect(
+      within(screen.getByRole("button", { name: "Chart metric" })).getByText("Combo"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("button", { name: "Time range" })).getByText("Last 30 days"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps both triggers at the 44px touch minimum", () => {
+    renderSection();
+    for (const name of ["Chart metric", "Time range"]) {
+      expect(screen.getByRole("button", { name }).className).toContain("h-11");
+    }
+  });
+
+  it("lists every metric and every range in the menu", async () => {
+    renderSection();
+    openMenu("Chart metric");
+    expect(screen.getAllByRole("menuitemradio").map((i) => i.textContent)).toEqual([
       "Combo",
       "Impressions",
       "Clicks",
       "CTR",
     ]);
-    const range = screen.getByLabelText("Time range") as HTMLSelectElement;
-    expect(range.value).toBe("30d");
-    expect([...range.options].map((o) => o.textContent)).toEqual([
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    openMenu("Time range");
+    expect(screen.getAllByRole("menuitemradio").map((i) => i.textContent)).toEqual([
       "Last 7 days",
       "Last 30 days",
       "Last 90 days",
@@ -75,18 +106,37 @@ describe("DeliveryChartSection toolbar", () => {
     ]);
   });
 
+  it("marks the current value checked and ticks it — never colour alone", () => {
+    renderSection();
+    openMenu("Chart metric");
+    const combo = screen.getByRole("menuitemradio", { name: "Combo" });
+    const clicks = screen.getByRole("menuitemradio", { name: "Clicks" });
+    expect(combo).toHaveAttribute("aria-checked", "true");
+    expect(clicks).toHaveAttribute("aria-checked", "false");
+    expect(combo.querySelector("svg")).not.toBeNull();
+    expect(clicks.querySelector("svg")).toBeNull();
+  });
+
   it("navigates on range change, preserving the metric for shareable links", () => {
     renderSection({ metric: "ctr" });
-    fireEvent.change(screen.getByLabelText("Time range"), { target: { value: "7d" } });
+    openMenu("Time range");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Last 7 days" }));
     expect(push).toHaveBeenCalledWith("/business?range=7d&metric=ctr", { scroll: false });
   });
 
-  it("mirrors metric changes to the URL without navigating", () => {
+  it("mirrors metric changes to the URL without navigating", async () => {
     const replace = vi.spyOn(window.history, "replaceState");
     renderSection();
-    fireEvent.change(screen.getByLabelText("Chart metric"), { target: { value: "clicks" } });
+    openMenu("Chart metric");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Clicks" }));
     expect(push).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith(null, "", "/business?range=30d&metric=clicks");
+    // Selecting closes the menu (Radix dismisses the layer once the item
+    // selects — its exit animation finishes first).
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    expect(
+      within(screen.getByRole("button", { name: "Chart metric" })).getByText("Clicks"),
+    ).toBeInTheDocument();
   });
 });
 
@@ -94,7 +144,8 @@ describe("DeliveryChartSection legend", () => {
   it("shows the Impressions + CTR legend on its own line in Combo only", () => {
     const { container } = renderSection();
     expect(container.querySelector('svg line[stroke="#A87A1F"]')).not.toBeNull();
-    fireEvent.change(screen.getByLabelText("Chart metric"), { target: { value: "impressions" } });
+    openMenu("Chart metric");
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Impressions" }));
     expect(container.querySelector('svg line[stroke="#A87A1F"]')).toBeNull();
     expect(screen.queryByText("CTR %")).toBeNull();
   });
@@ -105,10 +156,9 @@ describe("DeliveryChartSection empty state", () => {
     const { container } = render(
       <DeliveryChartSection data={data.slice(0, 2)} title="Delivery" range="30d" metric="combo" />,
     );
-    expect(
-      screen.getByText("Your chart appears once ads start delivering"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Your chart appears once ads start delivering")).toBeInTheDocument();
     expect(container.querySelector('[data-slot="chart"]')).toBeNull();
-    expect(screen.queryByRole("tablist", { name: "Chart metric" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Chart metric" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Time range" })).toBeNull();
   });
 });
