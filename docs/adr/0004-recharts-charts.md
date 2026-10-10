@@ -16,15 +16,24 @@
   `GET /api/v1/analytics` (`lib/endpoints.ts:analyticsFor`, mock in
   `lib/mock/series.ts` + `store.ts`; the Go backend owns the real buckets).
   Every plotted point is a full period, so no partial-month bar can render.
-  `components/DeliveryChartSection.tsx` owns the toolbar (metric tabs left,
-  range radiogroup right, shared segmented-pill style, 44px targets; range is a
-  native select on phones; legend below the chart, Combo only) and the URL
+  `components/DeliveryChartSection.tsx` owns the toolbar (two native dropdowns
+  under the title — metric left, range right; 44px targets; the platform picker
+  avoids two pill groups fighting for one phone row) and the URL
   (`?range=30d&metric=ctr`): range navigates (server refetches the window, the
   transition dims the old chart instead of a spinner), metric mirrors via
   replaceState with no refetch. `DeliveryChart.tsx` stays purely presentational
   and never slices or re-buckets. Under 3 points renders the empty state
-  ("Your chart appears once ads start delivering"). No custom picker or
-  compare-to-previous — the four presets cover current needs.
+  ("Your chart appears once ads start delivering"). Both axes run zero-based
+  with five equal round steps (`barAxis`/`ctrAxis`), so gridlines coincide;
+  nearest-step rounding with a no-clipping guard lands 30-day peaks on 0–100K
+  by 20K and 0–5% by 1%. CTR lines are linear with dots only on hover —
+  smoothing made day-to-day noise read as a trend. Vocabulary is fixed:
+  "Impressions" everywhere (card, dropdown, legend, axis); "Views" is gone.
+  Window deltas compare the selected window against the equal-length one
+  before it (`previous_window` in the API contract; `windowDeltas` in
+  `lib/insights.ts`), captioned "vs previous 30 days" — never a bare period
+  label. No custom picker or compare-to-previous — the four presets cover
+  current needs.
 - Consequences: pages read `searchParams` (dynamic rendering) and key the
   section by range+metric so back/forward remounts with fresh URL state. KPI
   deltas compare the window's last two points (day-over-day on daily windows).
