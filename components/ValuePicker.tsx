@@ -37,7 +37,7 @@ interface ValuePickerProps<T extends string> {
  * with a chevron: the label matches the card heading's weight exactly, so
  * the two sit on one level, and the chevron plus hover state mark it as a
  * control rather than content. Height stays 44px for the touch minimum, and
- * the menu keeps the 14px card radius with a 1px Mist border and no shadow,
+ * the menu keeps a 10px radius with a 1px Mist border and no shadow,
  * Naija Green tick for the current value. Colour is never the only signal —
  * the tick and the label both mark the selection.
  */
@@ -70,7 +70,7 @@ export function ValuePicker<T extends string>({
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="z-50 w-52 rounded-card border border-mist bg-white p-1"
+        className="z-50 w-52 rounded-[10px] border border-mist bg-white p-1"
       >
         <DropdownMenuHighlight mode="parent" className="rounded-md bg-mint">
           <DropdownMenuRadioGroup value={value} onValueChange={(next) => onValueChange(next as T)}>
