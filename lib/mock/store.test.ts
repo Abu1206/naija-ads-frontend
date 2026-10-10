@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockRead, mockWrite, resetStore } from "./store";
+import { businessSpendDaily } from "./data";
 import { roleFromLoginEmail, isRole } from "./session";
 
 // Every path these tests use is one a real page calls through `load()` or
@@ -111,10 +112,42 @@ describe("mockRead", () => {
     // Six months of monthly fixtures is the whole history: back to all-time.
     expect(read("6m").impressions).toBe(5172900);
 
-    // Balances and spend attribution have no window: identical on every range.
+    // Balances have no window: identical on every range.
     const [a, b] = [read("7d"), read("90d")];
     expect(a.remaining_budget_kobo).toBe(b.remaining_budget_kobo);
-    expect(a.spend_kobo).toBe(b.spend_kobo);
+  });
+
+  it("windows business spend with its own baseline", () => {
+    type Summary = {
+      spend_kobo: number;
+      previous_window: { impressions: number; clicks: number; spend_kobo?: number } | null;
+    };
+    const read = (range: string) =>
+      mockRead<Summary>(`/api/v1/analytics?scope=business&range=${range}`)!;
+    const sum = (days: number[]) => days.reduce((s, v) => s + v, 0);
+
+    // The daily attribution sums exactly to the lifetime total it slices.
+    expect(sum(businessSpendDaily)).toBe(1334500000);
+
+    // Windowed ranges cost their slice, far under the lifetime total that 6M
+    // and all-time keep.
+    expect(read("7d").spend_kobo).toBe(sum(businessSpendDaily.slice(-7)));
+    expect(read("30d").spend_kobo).toBe(sum(businessSpendDaily.slice(-30)));
+    expect(read("90d").spend_kobo).toBe(sum(businessSpendDaily.slice(-91)));
+    expect(read("30d").spend_kobo).toBeLessThan(1334500000);
+    expect(read("6m").spend_kobo).toBe(1334500000);
+    expect(read("all").spend_kobo).toBe(1334500000);
+
+    // Every windowed range carries a spend baseline for the tile delta;
+    // all-time has none.
+    expect(read("7d").previous_window?.spend_kobo).toBe(sum(businessSpendDaily.slice(-14, -7)));
+    expect(read("6m").previous_window?.spend_kobo).toBeGreaterThan(0);
+    expect(read("all").previous_window).toBeNull();
+
+    // The developer scope carries no spend attribution.
+    const supply = mockRead<Summary>("/api/v1/analytics?scope=developer&range=7d")!;
+    expect(supply.spend_kobo).toBe(0);
+    expect(supply.previous_window?.spend_kobo).toBeUndefined();
   });
 
   it("serves all-time totals with no baseline on the all-time range", () => {
