@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   budgetUtilization,
+  formatBytes,
   formatCTR,
   formatCount,
   formatDate,
@@ -68,6 +69,18 @@ describe("formatCount", () => {
 
   it("formats zero as a real number, not a gap", () => {
     expect(formatCount(0)).toBe("0");
+  });
+});
+
+describe("formatBytes", () => {
+  it("formats bytes, kilobytes and megabytes", () => {
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(48210)).toBe("47.1 KB");
+    expect(formatBytes(8421000)).toBe("8.0 MB");
+  });
+
+  it("returns em-dash for bad input", () => {
+    expect(formatBytes(-1)).toBe("—");
   });
 });
 
