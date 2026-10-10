@@ -62,6 +62,13 @@ function ctrOf(c: Campaign): number {
   return c.impressions > 0 ? c.clicks / c.impressions : 0;
 }
 
+/** Share of budget used at which the wallet counts as low — the overview
+ * banner, the wallet flag and the table signal all read this one source. */
+export const LOW_BALANCE_THRESHOLD = 0.85;
+/** CTR below this (with enough impressions to mean it) reads as weak creative. */
+export const WEAK_CTR_THRESHOLD = 0.01;
+export const CTR_SIGNAL_MIN_IMPRESSIONS = 10000;
+
 /**
  * Campaigns that need an advertiser's eye, most urgent first: rejected,
  * in-review and draft items before paused ones, then live campaigns with
@@ -81,9 +88,9 @@ export function attentionFlags(campaigns: Campaign[]): AttentionFlag[] {
       flags.push({ campaign, reason: "Paused — resume or archive to free the budget." });
     } else if (campaign.status === "active") {
       const share = budgetUtilization(campaign.spend_kobo, campaign.remaining_budget_kobo);
-      if (share !== null && share >= 0.85) {
+      if (share !== null && share >= LOW_BALANCE_THRESHOLD) {
         flags.push({ campaign, reason: "Budget 85%+ used — top up to keep delivering." });
-      } else if (campaign.impressions >= 10000 && ctrOf(campaign) < 0.01) {
+      } else if (campaign.impressions >= CTR_SIGNAL_MIN_IMPRESSIONS && ctrOf(campaign) < WEAK_CTR_THRESHOLD) {
         flags.push({ campaign, reason: "CTR under 1% — refresh the creative." });
       }
     }
@@ -104,4 +111,25 @@ export function attentionFlags(campaigns: Campaign[]): AttentionFlag[] {
     }
   };
   return flags.sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+}
+
+export interface CampaignSignal {
+  /** Short column label — "Low budget" or "Weak CTR". */
+  label: string;
+}
+
+/**
+ * Row-level health for the performance table: the same thresholds as
+ * attentionFlags, compressed to a column label. Active campaigns only — other
+ * statuses already speak through the status badge. Budget pressure first: a
+ * nearly-spent campaign needs money before creative advice.
+ */
+export function campaignSignal(campaign: Campaign): CampaignSignal | null {
+  if (campaign.status !== "active") return null;
+  const share = budgetUtilization(campaign.spend_kobo, campaign.remaining_budget_kobo);
+  if (share !== null && share >= LOW_BALANCE_THRESHOLD) return { label: "Low budget" };
+  if (campaign.impressions >= CTR_SIGNAL_MIN_IMPRESSIONS && ctrOf(campaign) < WEAK_CTR_THRESHOLD) {
+    return { label: "Weak CTR" };
+  }
+  return null;
 }

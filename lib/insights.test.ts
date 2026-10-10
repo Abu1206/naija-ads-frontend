@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attentionFlags, windowDeltas, windowTotals } from "./insights";
+import { attentionFlags, campaignSignal, windowDeltas, windowTotals } from "./insights";
 import type { Campaign } from "./types";
 
 const campaign = (overrides: Partial<Campaign>): Campaign => ({
@@ -95,5 +95,39 @@ describe("attentionFlags", () => {
       campaign({ id: `d${i}`, name: `Draft ${i}`, status: "draft" }),
     );
     expect(attentionFlags(many)).toHaveLength(4);
+  });
+});
+
+describe("campaignSignal", () => {
+  it("stays quiet on a healthy active campaign", () => {
+    expect(campaignSignal(campaign({}))).toBeNull();
+  });
+
+  it("flags a nearly-spent budget, including exactly at the threshold", () => {
+    expect(
+      campaignSignal(campaign({ spend_kobo: 85000000, remaining_budget_kobo: 15000000 })),
+    ).toEqual({ label: "Low budget" });
+  });
+
+  it("flags weak CTR once impressions are enough to mean it", () => {
+    expect(campaignSignal(campaign({ impressions: 50000, clicks: 100 }))).toEqual({
+      label: "Weak CTR",
+    });
+    // 500 impressions at 0% CTR is noise, not a verdict.
+    expect(campaignSignal(campaign({ impressions: 500, clicks: 0 }))).toBeNull();
+  });
+
+  it("ranks budget pressure above creative advice", () => {
+    expect(
+      campaignSignal(
+        campaign({ impressions: 50000, clicks: 100, spend_kobo: 90000000, remaining_budget_kobo: 10000000 }),
+      ),
+    ).toEqual({ label: "Low budget" });
+  });
+
+  it("stays quiet off active — other statuses speak through the badge", () => {
+    expect(
+      campaignSignal(campaign({ status: "paused", impressions: 50000, clicks: 100 })),
+    ).toBeNull();
   });
 });
