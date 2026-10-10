@@ -23,17 +23,27 @@ describe("DataTable", () => {
       />,
     );
     expect(screen.getByText("Campaign performance")).toBeInTheDocument();
-    expect(container.querySelector("header")?.className).not.toMatch(/border-b/);
+    expect(container.querySelector('[data-slot="card-header"]')?.className).not.toMatch(/border-b/);
   });
 
-  it("stands alone in one frame: no nested table border, row dividers only", () => {
+  it("one Mist frame: the card border is the table's edge, no nested box", () => {
     const { container } = render(
       <DataTable title="Campaign performance" columns={columns} rows={rows} getRowKey={(r) => r.id} />,
     );
-    // The scroll wrapper carries no border of its own.
+    // Same bordered Card surface as DeliveryChartSection and every dashboard panel.
+    const card = container.querySelector('[data-slot="card"]');
+    expect(card?.className).toMatch(/rounded-card border border-mist bg-white/);
+    // The flush table carries no second frame of its own — the scroll wrapper only.
     expect(container.querySelector(".overflow-x-auto")?.className).not.toMatch(/border/);
     expect(container.querySelector("tbody")?.className).toMatch(/divide-y/);
     expect(container.querySelector("table")?.className).toMatch(/tabular-nums/);
+  });
+
+  it("keeps the card title a heading for screen-reader navigation", () => {
+    render(
+      <DataTable title="Campaign performance" columns={columns} rows={rows} getRowKey={(r) => r.id} />,
+    );
+    expect(screen.getByRole("heading", { name: "Campaign performance", level: 2 })).toBeInTheDocument();
   });
 
   it("right-aligns numeric columns, left-aligns the rest", () => {

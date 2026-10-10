@@ -19,10 +19,10 @@ interface DataTableProps<T> {
   getRowKey: (row: T, index: number) => string;
 }
 
-/** Standalone table card on the same white Card surface as the chart section
- * (Cloud page ground, no enclosing border), title with no divider, and the
- * table sitting flush inside it — row dividers only, no nested bordered box.
- * Numbers get tabular figures and rows lift on hover so dense metrics scan. */
+/** Standalone table card: one Mist frame (the Card border), title with no
+ * divider, and the table sitting flush inside it — row dividers only, no
+ * nested bordered box. Numbers get tabular figures and rows lift on hover so
+ * dense metrics scan. */
 export function DataTable<T>({
   columns,
   rows,
