@@ -54,23 +54,41 @@ const compact = new Intl.NumberFormat("en", {
 
 /**
  * Aligned round axes, five equal steps each. Both domains start at zero with
- * the same tick count, so tick positions coincide and the horizontal gridlines
- * pass through both axes' labels at once. Bars fill ~43% of the height and the
- * CTR line rides at ~70% — separation, not color, keeps the line clear of the
- * bars (gold-on-green is ~1.2:1). Current 30D data lands exactly on 0–100K by
- * 20K and 0–5% by 1%.
+ * the same tick count, so tick positions coincide and one set of horizontal
+ * gridlines passes through both axes' labels at once.
+ *
+ * The step is the ladder value nearest the fill target (bars ~43% of the
+ * height, CTR line ~70% — separation, not color, keeps the line clear of the
+ * bars, since gold-on-green is ~1.2:1). Nearest-then-guard: the user's
+ * 30-day peaks (~46K impressions, ~3.9% CTR) land exactly on 0–100K by 20K
+ * and 0–5% by 1%, and a peak just under a step boundary (e.g. 2.57% CTR
+ * would clip at 2.5%) steps up instead of cutting the data off.
  */
 const AXIS_INTERVALS = 5;
 const BAR_FILL = 0.43;
 const LINE_FILL = 0.7;
 
-function roundStep(target: number): number {
-  const raw = target / AXIS_INTERVALS;
+const STEP_FACTORS = [1, 2, 5, 10] as const;
+
+/** Round steps around a magnitude: 1, 2, 5, 10 × 10^n. */
+function stepLadder(raw: number): number[] {
   const magnitude = 10 ** Math.floor(Math.log10(raw));
-  for (const k of [1, 2, 2.5, 5, 10]) {
-    if (k * magnitude >= raw) return k * magnitude;
+  const out: number[] = [];
+  for (const m of [magnitude / 10, magnitude, magnitude * 10]) {
+    for (const k of STEP_FACTORS) out.push(k * m);
   }
-  return 10 * magnitude;
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
+/** Nearest ladder step for the target span, never below the data itself. */
+function axisStep(dataMax: number, targetSpan: number): number {
+  const raw = targetSpan / AXIS_INTERVALS;
+  const ladder = stepLadder(raw);
+  const nearest = ladder.reduce((best, c) =>
+    Math.abs(c - raw) < Math.abs(best - raw) ? c : best,
+  );
+  if (nearest * AXIS_INTERVALS >= dataMax) return nearest;
+  return ladder.find((c) => c > nearest && c * AXIS_INTERVALS >= dataMax) ?? nearest;
 }
 
 interface AxisScale {
@@ -79,12 +97,12 @@ interface AxisScale {
 }
 
 function barAxis(maxValue: number): AxisScale {
-  const step = roundStep(maxValue > 0 ? maxValue / BAR_FILL : AXIS_INTERVALS);
+  const step = axisStep(maxValue, maxValue > 0 ? maxValue / BAR_FILL : AXIS_INTERVALS);
   return { max: step * AXIS_INTERVALS, ticks: Array.from({ length: AXIS_INTERVALS + 1 }, (_, i) => i * step) };
 }
 
 function ctrAxis(maxFrac: number): AxisScale {
-  const step = roundStep(maxFrac > 0 ? maxFrac / LINE_FILL : 0.05);
+  const step = axisStep(maxFrac, maxFrac > 0 ? maxFrac / LINE_FILL : 0.05);
   return { max: step * AXIS_INTERVALS, ticks: Array.from({ length: AXIS_INTERVALS + 1 }, (_, i) => i * step) };
 }
 
@@ -110,7 +128,7 @@ const chartConfig = {
 
 interface ChartRow {
   label: string;
-  views: number;
+  impressions: number;
   clicks: number;
   ctr: number;
 }
@@ -134,9 +152,9 @@ export function DeliveryTooltipContent({
   return (
     <div className="rounded-lg border border-mist bg-white px-3 py-2 text-xs shadow-sm">
       <div className="mb-1 font-bold text-ink">{label ?? row.label}</div>
-      <div className="text-muted">{formatCount(row.views)} views</div>
+      <div className="text-muted">{formatCount(row.impressions)} impressions</div>
       <div className="text-muted">{formatCount(row.clicks)} clicks</div>
-      <div className="mt-0.5 font-bold text-pine">{formatCTR(row.clicks, row.views)} CTR</div>
+      <div className="mt-0.5 font-bold text-pine">{formatCTR(row.clicks, row.impressions)} CTR</div>
     </div>
   );
 }
@@ -155,7 +173,7 @@ const AXIS_TITLE = { fontSize: 11, fontWeight: 700, fill: MUTED } as const;
 /**
  * Pure delivery renderer on the shadcn chart pattern (recharts): desktop gets
  * a bars-and-line combo — view bars on the left axis, CTR line on the right —
- * and small screens get one metric at a time. Raw clicks (~2% of views) live
+ * and small screens get one metric at a time. Raw clicks (~2% of impressions) live
  * in the tooltip, never as same-axis bars. Display-only: every number arrives
  * backend-computed (AGENTS.md §6.1), already windowed to the requested range —
  * this component never slices or re-buckets. Toolbar, legend and empty state
@@ -171,12 +189,12 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
 
   const rows: ChartRow[] = data.map((d) => ({
     label: d.label,
-    views: d.impressions,
+    impressions: d.impressions,
     clicks: d.clicks,
     ctr: d.impressions > 0 ? d.clicks / d.impressions : 0,
   }));
   const maxCtr = ctrAxis(Math.max(0, ...rows.map((r) => r.ctr)));
-  const viewsAxis = barAxis(Math.max(0, ...rows.map((r) => r.views)));
+  const impressionsAxis = barAxis(Math.max(0, ...rows.map((r) => r.impressions)));
   const clicksAxis = barAxis(Math.max(0, ...rows.map((r) => r.clicks)));
   const summary = data
     .map((d) => `${d.label}: ${formatCount(d.impressions)} impressions, ${formatCTR(d.clicks, d.impressions)} CTR`)
@@ -189,23 +207,23 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
         {metric === "combo" && (
           <ChartContainer config={chartConfig} className="h-[300px]">
             <ComposedChart accessibilityLayer data={rows} margin={{ left: 0, right: 0, top: 8, bottom: 0 }}>
-              {/* Dual axes are named ("views"/"ctr"), and the grid defaults to
+              {/* Dual axes are named ("impressions"/"ctr"), and the grid defaults to
                   axis 0 — point it at the left axis or it falls back to the
                   plot edges. Both axes share tick positions, so one set of
                   lines serves both. */}
-              <CartesianGrid vertical={false} stroke={MIST} yAxisId="views" />
+              <CartesianGrid vertical={false} stroke={MIST} yAxisId="impressions" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
               <YAxis
-                yAxisId="views"
+                yAxisId="impressions"
                 orientation="left"
                 width={52}
-                domain={[0, viewsAxis.max]}
-                ticks={viewsAxis.ticks}
+                domain={[0, impressionsAxis.max]}
+                ticks={impressionsAxis.ticks}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => compact.format(v)}
                 tick={AXIS_TICK}
-                label={{ value: "Views", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
+                label={{ value: "Impressions", angle: -90, position: "insideLeft", offset: 6, style: AXIS_TITLE }}
               />
               <YAxis
                 yAxisId="ctr"
@@ -220,7 +238,7 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
                 label={{ value: "CTR %", angle: 90, position: "insideRight", offset: 6, style: AXIS_TITLE }}
               />
               <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
-              <Bar yAxisId="views" dataKey="views" name="Views" fill="var(--color-views)" radius={4} maxBarSize={46} />
+              <Bar yAxisId="impressions" dataKey="impressions" name="Impressions" fill="var(--color-impressions)" radius={4} maxBarSize={46} />
               <Line
                 yAxisId="ctr"
                 dataKey="ctr"
@@ -241,14 +259,14 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
               <YAxis
                 width={52}
-                domain={[0, (metric === "clicks" ? clicksAxis : viewsAxis).max]}
-                ticks={(metric === "clicks" ? clicksAxis : viewsAxis).ticks}
+                domain={[0, (metric === "clicks" ? clicksAxis : impressionsAxis).max]}
+                ticks={(metric === "clicks" ? clicksAxis : impressionsAxis).ticks}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => compact.format(v)}
                 tick={AXIS_TICK}
                 label={{
-                  value: metric === "clicks" ? "Clicks" : "Views",
+                  value: metric === "clicks" ? "Clicks" : "Impressions",
                   angle: -90,
                   position: "insideLeft",
                   offset: 6,
@@ -257,9 +275,9 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
               />
               <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
               <Bar
-                dataKey={metric === "clicks" ? "clicks" : "views"}
-                name={metric === "clicks" ? "Clicks" : "Views"}
-                fill={metric === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
+                dataKey={metric === "clicks" ? "clicks" : "impressions"}
+                name={metric === "clicks" ? "Clicks" : "Impressions"}
+                fill={metric === "clicks" ? "var(--color-clicks)" : "var(--color-impressions)"}
                 radius={4}
                 maxBarSize={46}
               />
@@ -352,14 +370,14 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
                 <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={32} tick={AXIS_TICK} />
                 <YAxis
                   width={52}
-                  domain={[0, (mobileMetric === "clicks" ? clicksAxis : viewsAxis).max]}
-                  ticks={(mobileMetric === "clicks" ? clicksAxis : viewsAxis).ticks}
+                  domain={[0, (mobileMetric === "clicks" ? clicksAxis : impressionsAxis).max]}
+                  ticks={(mobileMetric === "clicks" ? clicksAxis : impressionsAxis).ticks}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v: number) => compact.format(v)}
                   tick={AXIS_TICK}
                   label={{
-                    value: mobileMetric === "clicks" ? "Clicks" : "Views",
+                    value: mobileMetric === "clicks" ? "Clicks" : "Impressions",
                     angle: -90,
                     position: "insideLeft",
                     offset: 6,
@@ -368,9 +386,9 @@ export function DeliveryChart({ data, title, metric }: DeliveryChartProps) {
                 />
                 <ChartTooltip cursor={{ fill: MIST, opacity: 0.4 }} content={<DeliveryTooltipContent />} />
                 <Bar
-                  dataKey={mobileMetric === "clicks" ? "clicks" : "views"}
-                  name={mobileMetric === "clicks" ? "Clicks" : "Views"}
-                  fill={mobileMetric === "clicks" ? "var(--color-clicks)" : "var(--color-views)"}
+                  dataKey={mobileMetric === "clicks" ? "clicks" : "impressions"}
+                  name={mobileMetric === "clicks" ? "Clicks" : "Impressions"}
+                  fill={mobileMetric === "clicks" ? "var(--color-clicks)" : "var(--color-impressions)"}
                   radius={6}
                   maxBarSize={18}
                 />

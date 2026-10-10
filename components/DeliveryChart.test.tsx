@@ -43,19 +43,19 @@ describe("DeliveryChart", () => {
   it("labels both axes so the dual scale reads without the legend", () => {
     render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
     // Desktop combo and the mobile single-series view both render (CSS picks
-    // the visible one), so axis titles appear more than once.
-    expect(screen.getAllByText("Views").length).toBeGreaterThanOrEqual(1);
+    // the visible one), so axis titles appear more than once. "Impressions"
+    // is the one name — the cards and the dropdown use the same word.
+    expect(screen.getAllByText("Impressions").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("CTR %").length).toBeGreaterThanOrEqual(1);
   });
 
   it("snaps both axes to five round steps so the gridlines coincide", () => {
-    // 1.104M max bars ÷ 0.43 fill snaps to 0–5M by 1M; ~2.6% max CTR ÷ 0.7
-    // snaps to 0–5% by 1%. Same tick count from zero on both axes, so one set
-    // of horizontal gridlines serves both.
+    // Bars peak at 1.104M → a ~2.57M target span lands on the nearest 500K
+    // step: 0–2.5M. CTR peaks at 2.57% → the nearest step (0.5%) would clip
+    // it, so the guard steps up to 0–5% by 1%. Same tick count from zero on
+    // both axes, so one set of gridlines serves both.
     const { container } = render(<DeliveryChart data={data} title="Delivery" metric="combo" />);
-    // Desktop and mobile trees both render (CSS picks the visible one), and
-    // both now share the same round scale.
-    expect(screen.getAllByText("5M").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("2.5M").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("5%").length).toBeGreaterThanOrEqual(1);
     // The first chart in DOM order is the desktop combo: exactly the
     // five-interval lines, no more, no fewer.
@@ -85,7 +85,7 @@ describe("DeliveryChart", () => {
   it("gives the Clicks tab its own scale in the single-metric view", () => {
     render(<DeliveryChart data={data} title="Delivery" metric="clicks" />);
     expect(screen.getAllByText("Clicks").length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText("Views")).toBeNull();
+    expect(screen.queryByText("Impressions")).toBeNull();
     expect(screen.queryByText("CTR %")).toBeNull();
   });
 
@@ -108,15 +108,15 @@ describe("DeliveryChart", () => {
 });
 
 describe("DeliveryTooltipContent", () => {
-  it("shows views, raw clicks and CTR together", () => {
+  it("shows impressions, raw clicks and CTR together", () => {
     render(
       <DeliveryTooltipContent
         active
         label="2026-07"
-        payload={[{ payload: { label: "2026-07", views: 1104000, clicks: 28400, ctr: 0.0257 } }]}
+        payload={[{ payload: { label: "2026-07", impressions: 1104000, clicks: 28400, ctr: 0.0257 } }]}
       />,
     );
-    expect(screen.getByText("1,104,000 views")).toBeInTheDocument();
+    expect(screen.getByText("1,104,000 impressions")).toBeInTheDocument();
     expect(screen.getByText("28,400 clicks")).toBeInTheDocument();
     expect(screen.getByText("2.57% CTR")).toBeInTheDocument();
   });

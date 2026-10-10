@@ -53,69 +53,48 @@ function renderSection(props?: { range?: "7d" | "30d" | "90d" | "6m"; metric?: "
 }
 
 describe("DeliveryChartSection toolbar", () => {
-  it("pairs metric tabs with a range radiogroup in one row", () => {
+  it("pairs the metric dropdown with a range dropdown in one row", () => {
     renderSection();
-    const tabs = screen.getByRole("tablist", { name: "Chart metric" });
-    expect(within(tabs).getAllByRole("tab").map((t) => t.textContent)).toEqual([
+    // Two native selects side by side — no breakpoints, no stacking.
+    expect(screen.getByLabelText("Chart metric")).toBeInTheDocument();
+    const metric = screen.getByLabelText("Chart metric") as HTMLSelectElement;
+    expect(metric.value).toBe("combo");
+    expect([...metric.options].map((o) => o.textContent)).toEqual([
       "Combo",
       "Impressions",
       "Clicks",
       "CTR",
     ]);
-    expect(within(tabs).getByRole("tab", { name: "Combo" })).toHaveAttribute("aria-selected", "true");
-    const radios = screen.getByRole("radiogroup", { name: "Time range" });
-    expect(within(radios).getAllByRole("radio").map((r) => r.textContent)).toEqual([
-      "7D",
-      "30D",
-      "90D",
-      "6M",
+    const range = screen.getByLabelText("Time range") as HTMLSelectElement;
+    expect(range.value).toBe("30d");
+    expect([...range.options].map((o) => o.textContent)).toEqual([
+      "Last 7 days",
+      "Last 30 days",
+      "Last 90 days",
+      "Last 6 months",
     ]);
-    expect(within(radios).getByRole("radio", { name: "30D" })).toHaveAttribute("aria-checked", "true");
-  });
-
-  it("marks the selected pills white with Naija Green text", () => {
-    const { container } = renderSection();
-    const selected = container.querySelector('[aria-selected="true"]');
-    expect(selected?.className).toContain("bg-white");
-    expect(selected?.className).toContain("text-naija");
   });
 
   it("navigates on range change, preserving the metric for shareable links", () => {
     renderSection({ metric: "ctr" });
-    const radios = screen.getByRole("radiogroup", { name: "Time range" });
-    fireEvent.click(within(radios).getByRole("radio", { name: "7D" }));
+    fireEvent.change(screen.getByLabelText("Time range"), { target: { value: "7d" } });
     expect(push).toHaveBeenCalledWith("/business?range=7d&metric=ctr", { scroll: false });
   });
 
-  it("mirrors metric taps to the URL without navigating", () => {
+  it("mirrors metric changes to the URL without navigating", () => {
     const replace = vi.spyOn(window.history, "replaceState");
     renderSection();
-    const tabs = screen.getByRole("tablist", { name: "Chart metric" });
-    fireEvent.click(within(tabs).getByRole("tab", { name: "Clicks" }));
+    fireEvent.change(screen.getByLabelText("Chart metric"), { target: { value: "clicks" } });
     expect(push).not.toHaveBeenCalled();
     expect(replace).toHaveBeenCalledWith(null, "", "/business?range=30d&metric=clicks");
-    expect(within(tabs).getByRole("tab", { name: "Clicks" })).toHaveAttribute("aria-selected", "true");
-  });
-
-  it("moves metric selection with arrow keys", () => {
-    renderSection();
-    const tabs = screen.getByRole("tablist", { name: "Chart metric" });
-    const combo = within(tabs).getByRole("tab", { name: "Combo" });
-    combo.focus();
-    fireEvent.keyDown(tabs, { key: "ArrowRight" });
-    expect(within(tabs).getByRole("tab", { name: "Impressions" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
   });
 });
 
 describe("DeliveryChartSection legend", () => {
-  it("shows the Views + CTR legend on its own line in Combo only", () => {
+  it("shows the Impressions + CTR legend on its own line in Combo only", () => {
     const { container } = renderSection();
     expect(container.querySelector('svg line[stroke="#A87A1F"]')).not.toBeNull();
-    const tabs = screen.getByRole("tablist", { name: "Chart metric" });
-    fireEvent.click(within(tabs).getByRole("tab", { name: "Impressions" }));
+    fireEvent.change(screen.getByLabelText("Chart metric"), { target: { value: "impressions" } });
     expect(container.querySelector('svg line[stroke="#A87A1F"]')).toBeNull();
     expect(screen.queryByText("CTR %")).toBeNull();
   });
