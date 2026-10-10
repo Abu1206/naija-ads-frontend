@@ -34,9 +34,9 @@ export interface WindowDeltas {
 /**
  * Window-vs-window comparison: the selected window against the equal-length
  * window before it (`previous_window` from the API). Counts and CTR only —
- * spend has no previous-window series, so the budget card shows utilization
- * context instead. Null when there is no baseline, so callers can drop the
- * delta rather than render a misleading 0%.
+ * spend has its own baseline (`previous_window.spend_kobo`), so callers
+ * compare it with `formatDelta` directly. Null when there is no baseline, so
+ * callers can drop the delta rather than render a misleading 0%.
  */
 export function windowDeltas(
   series: SeriesPoint[],
