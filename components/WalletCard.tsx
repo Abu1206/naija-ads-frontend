@@ -3,8 +3,12 @@ import { Naira } from "./Naira";
 
 /**
  * The most recognisable object in the product (design-system.md): Deep Forest
- * card, small-caps label, balance in gold, main action below it.
- * The balance is always a pre-formatted string — money math lives server-side.
+ * card, small-caps label, balance in gold, main action below it. The balance is
+ * always a pre-formatted string — money math lives server-side.
+ *
+ * Two zones, number on top and hint/action pinned to the bottom: in a pair of
+ * cards with `items-stretch`, the hint lines land on one baseline instead of
+ * the second card showing a slab of empty green.
  */
 export function WalletCard({
   label,
@@ -20,14 +24,20 @@ export function WalletCard({
   return (
     <section
       aria-label={`${label}: ${balance}`}
-      className="rounded-wallet border border-forest bg-forest p-6"
+      className="flex h-full flex-col justify-between gap-5 rounded-wallet border border-forest bg-forest p-5"
     >
-      <p className="text-xs font-bold tracking-wider text-mint/70 uppercase">{label}</p>
-      <p className="mt-2 font-display text-4xl font-bold tracking-tight text-gold">
-        <Naira value={balance} />
-      </p>
-      {hint && <p className="mt-2 text-sm text-mint/70">{hint}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      <div>
+        <p className="text-xs font-bold tracking-wider text-mint/70 uppercase">{label}</p>
+        <p className="mt-2 font-display text-4xl font-bold tracking-tight text-gold">
+          <Naira value={balance} />
+        </p>
+      </div>
+      {(hint || action) && (
+        <div className="space-y-3">
+          {hint && <p className="text-sm text-mint/70">{hint}</p>}
+          {action}
+        </div>
+      )}
     </section>
   );
 }
