@@ -48,6 +48,15 @@ export function formatCount(value: number): string {
   return new Intl.NumberFormat("en-NG").format(value);
 }
 
+/** 48210 -> "47.1 KB", 8421000 -> "8.0 MB". Backend bytes only, display only. */
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
+
 export type DeltaDirection = "up" | "down" | "flat";
 
 export interface Delta {
