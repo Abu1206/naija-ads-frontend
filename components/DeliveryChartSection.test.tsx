@@ -103,6 +103,7 @@ describe("DeliveryChartSection toolbar", () => {
       "Last 30 days",
       "Last 90 days",
       "Last 6 months",
+      "All time",
     ]);
   });
 

@@ -128,10 +128,14 @@ function scopeParam(path: string): string | null {
 }
 
 /**
- * Windowed series for the ranged chart. Totals and by_format stay all-time —
- * only the series is windowed, the way the backend scopes a ranged query.
- * Unknown or missing ranges fall back to the monthly series (the pre-range
- * behaviour), so old callers keep working.
+ * Windowed series AND windowed KPI totals for the ranged chart. A ranged query
+ * scopes the whole summary to the window — the way the backend scopes a ranged
+ * query — so the KPI tiles always agree with the chart: totals equal the sums
+ * of the returned series on every range. `remaining` stays point-in-time (a
+ * balance has no window), and `spend`/`by_format` stay all-time: the fixtures
+ * carry no daily spend or per-format attribution, and only the backend may
+ * attribute money. Unknown or missing ranges fall back to the monthly series
+ * (the pre-range behaviour), so old callers keep working.
  */
 function windowSums(points: MockSeriesPoint[]) {
   if (points.length === 0) return null;
@@ -166,9 +170,11 @@ function priorSixMonths(scope: "business" | "developer") {
 /**
  * The equal-length window immediately before the requested one — the baseline
  * for window deltas ("vs previous 30 days"). 7D/30D/90D slice the daily
- * history; 6M back-projects the fixtures. Null when history is too short.
+ * history; 6M back-projects the fixtures. Null when history is too short —
+ * and always for all-time, which has no equal-length baseline.
  */
 function priorWindow(scope: "business" | "developer", range: ChartRange) {
+  if (range === "all") return null;
   const daily = scope === "developer" ? developerDaily : businessDaily;
   switch (range) {
     case "7d":
@@ -192,15 +198,26 @@ function rangedAnalytics(scope: "business" | "developer", path: string) {
   if (raw === null) return base;
   const range = parseChartRange(raw);
   const previous_window = priorWindow(scope, range);
+  // KPI tiles read these totals, so they follow the picker exactly: whatever
+  // the chart draws, the cards sum to. The spread is guarded — an empty
+  // series keeps the all-time base rather than zeroing the tiles.
+  const scoped = (series: MockSeriesPoint[]) => {
+    const totals = windowSums(series);
+    return { ...base, series, previous_window, ...(totals ?? {}) };
+  };
   switch (range) {
     case "7d":
-      return { ...base, series: daily.slice(-7), previous_window };
+      return scoped(daily.slice(-7));
     case "30d":
-      return { ...base, series: daily.slice(-30), previous_window };
+      return scoped(daily.slice(-30));
     case "90d":
-      return { ...base, series: toWeekly(daily), previous_window };
+      return scoped(toWeekly(daily));
     case "6m":
-      return { ...base, previous_window };
+    case "all":
+      // The monthly fixtures are the whole history: totals come back to
+      // all-time. 6M keeps its back-projected baseline; all-time has none,
+      // so its deltas render null instead of a caption.
+      return scoped(base.series);
   }
 }
 

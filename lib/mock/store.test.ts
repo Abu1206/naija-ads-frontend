@@ -83,6 +83,60 @@ describe("mockRead", () => {
     expect(legacy.previous_window).toBeNull();
   });
 
+  it("scopes KPI totals to the selected window so tiles agree with the chart", () => {
+    type Summary = {
+      series: { impressions: number; clicks: number }[];
+      impressions: number;
+      clicks: number;
+      spend_kobo: number;
+      remaining_budget_kobo: number;
+    };
+    const read = (range: string) =>
+      mockRead<Summary>(`/api/v1/analytics?scope=business&range=${range}`)!;
+
+    for (const range of ["7d", "30d", "90d", "6m"]) {
+      const summary = read(range);
+      const sums = summary.series.reduce(
+        (acc, p) => ({ impressions: acc.impressions + p.impressions, clicks: acc.clicks + p.clicks }),
+        { impressions: 0, clicks: 0 },
+      );
+      // Whatever the chart draws, the cards sum to.
+      expect(summary.impressions).toBe(sums.impressions);
+      expect(summary.clicks).toBe(sums.clicks);
+      expect(summary.clicks).toBeLessThanOrEqual(summary.impressions);
+    }
+
+    // Windows nest: a week is a slice of a month.
+    expect(read("7d").impressions).toBeLessThan(read("30d").impressions);
+    // Six months of monthly fixtures is the whole history: back to all-time.
+    expect(read("6m").impressions).toBe(5172900);
+
+    // Balances and spend attribution have no window: identical on every range.
+    const [a, b] = [read("7d"), read("90d")];
+    expect(a.remaining_budget_kobo).toBe(b.remaining_budget_kobo);
+    expect(a.spend_kobo).toBe(b.spend_kobo);
+  });
+
+  it("serves all-time totals with no baseline on the all-time range", () => {
+    type Summary = {
+      series: { impressions: number; clicks: number }[];
+      impressions: number;
+      clicks: number;
+      previous_window: { impressions: number; clicks: number } | null;
+    };
+    const all = mockRead<Summary>("/api/v1/analytics?scope=business&range=all")!;
+    // The monthly fixtures are the whole history: back to the legacy totals…
+    expect(all.impressions).toBe(5172900);
+    expect(all.clicks).toBe(168200);
+    expect(all.series).toHaveLength(6);
+    // …but the whole history has no equal-length baseline: no delta captions.
+    expect(all.previous_window).toBeNull();
+
+    const supply = mockRead<Summary>("/api/v1/analytics?scope=developer&range=all")!;
+    expect(supply.impressions).toBe(3689000);
+    expect(supply.previous_window).toBeNull();
+  });
+
   it("scopes owned collections to the signed-in account", () => {
     const campaigns = mockRead<{ business_id: string }[]>("/api/v1/campaigns");
     expect(campaigns?.length).toBeGreaterThan(0);

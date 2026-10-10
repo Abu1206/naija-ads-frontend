@@ -3,11 +3,12 @@
 // server-safe: no component or navigation imports here.
 //
 // Ranges change the grain, not just the slice — that is the point. 7D/30D come
-// back daily, 90D weekly, 6M monthly, so every plotted point is a full period
-// and a half-finished current month never renders as a short bar (AGENTS.md
-// §4: the backend owns buckets; the mock in lib/mock/series.ts stands in).
+// back daily, 90D weekly, 6M monthly, All time monthly over the full history,
+// so every plotted point is a full period and a half-finished current month
+// never renders as a short bar (AGENTS.md §4: the backend owns buckets; the
+// mock in lib/mock/series.ts stands in).
 
-export const CHART_RANGES = ["7d", "30d", "90d", "6m"] as const;
+export const CHART_RANGES = ["7d", "30d", "90d", "6m", "all"] as const;
 export type ChartRange = (typeof CHART_RANGES)[number];
 
 export const DEFAULT_RANGE: ChartRange = "30d";
@@ -17,15 +18,17 @@ export const RANGE_LABELS: Record<ChartRange, string> = {
   "30d": "Last 30 days",
   "90d": "Last 90 days",
   "6m": "Last 6 months",
+  "all": "All time",
 };
 
 /**
  * Caption for window-vs-window deltas: the equal-length span immediately
  * before the selected one. "vs previous 30 days" must describe the real
  * comparison — an advertiser should never have to guess what a delta is
- * measured against.
+ * measured against. All time has no entry: the whole history has no
+ * equal-length baseline, so its deltas render null instead of a caption.
  */
-export const RANGE_COMPARISON: Record<ChartRange, string> = {
+export const RANGE_COMPARISON: Partial<Record<ChartRange, string>> = {
   "7d": "vs previous 7 days",
   "30d": "vs previous 30 days",
   "90d": "vs previous 90 days",
@@ -43,6 +46,7 @@ export function grainForRange(range: ChartRange): SeriesGrain {
     case "90d":
       return "weekly";
     case "6m":
+    case "all":
       return "monthly";
   }
 }

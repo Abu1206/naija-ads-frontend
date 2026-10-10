@@ -9,11 +9,12 @@ import {
 } from "./ranges";
 
 describe("parseChartRange", () => {
-  it("accepts the four presets", () => {
+  it("accepts the five presets", () => {
     expect(parseChartRange("7d")).toBe("7d");
     expect(parseChartRange("30d")).toBe("30d");
     expect(parseChartRange("90d")).toBe("90d");
     expect(parseChartRange("6m")).toBe("6m");
+    expect(parseChartRange("all")).toBe("all");
   });
 
   it("falls back to 30D for missing, unknown or repeated params", () => {
@@ -27,6 +28,7 @@ describe("parseChartRange", () => {
     expect(grainForRange("30d")).toBe("daily");
     expect(grainForRange("90d")).toBe("weekly");
     expect(grainForRange("6m")).toBe("monthly");
+    expect(grainForRange("all")).toBe("monthly");
   });
 });
 
@@ -46,5 +48,7 @@ describe("RANGE_COMPARISON", () => {
     expect(RANGE_COMPARISON["30d"]).toBe("vs previous 30 days");
     expect(RANGE_COMPARISON["90d"]).toBe("vs previous 90 days");
     expect(RANGE_COMPARISON["6m"]).toBe("vs previous 6 months");
+    // All time has no equal-length baseline: no caption, null deltas.
+    expect(RANGE_COMPARISON["all"]).toBeUndefined();
   });
 });
