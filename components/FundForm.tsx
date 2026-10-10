@@ -49,24 +49,31 @@ export function FundForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-xl space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="max-w-xl space-y-3" noValidate>
       <Field id="amount" label="Amount">
-        <div className="relative">
-          <span aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
-            ₦
-          </span>
-          <TextInput
-            id="amount"
-            name="amount"
-            inputMode="decimal"
-            placeholder="10,000"
-            value={naira}
-            onChange={(e) => setNaira(e.target.value)}
-            className="pl-8"
-          />
+        {/* One row: field and primary action stay together so the eye reads
+            "type, then fund" without crossing a column of chips. */}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <span aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted">
+              ₦
+            </span>
+            <TextInput
+              id="amount"
+              name="amount"
+              inputMode="decimal"
+              placeholder="10,000"
+              value={naira}
+              onChange={(e) => setNaira(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Button type="submit" variant="gold" disabled={busy} className="sm:shrink-0">
+            {busy ? "Opening checkout…" : "Fund wallet"}
+          </Button>
         </div>
       </Field>
-      <div className="flex flex-wrap gap-2" aria-label="Quick amounts">
+      <div className="flex flex-wrap items-center gap-2" aria-label="Quick amounts">
         {QUICK_AMOUNTS.map((amount) => (
           <button
             key={amount}
@@ -77,10 +84,10 @@ export function FundForm() {
               setErrors([]);
             }}
             aria-pressed={naira === amount}
-            className={`inline-flex h-11 items-center rounded-lg border px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`inline-flex h-9 items-center rounded-lg border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija disabled:cursor-not-allowed disabled:opacity-60 ${
               naira === amount
                 ? "border-naija bg-mint text-pine"
-                : "border-mist bg-white text-ink hover:border-naija/40"
+                : "border-mist bg-white text-muted hover:border-naija/40 hover:text-ink"
             }`}
           >
             ₦{Number(amount).toLocaleString("en-NG")}
@@ -88,10 +95,6 @@ export function FundForm() {
         ))}
       </div>
       <FieldErrors errors={errors} />
-      {/* Gold sits next to money: funding is the one place a gold button lives. */}
-      <Button type="submit" variant="gold" disabled={busy}>
-        {busy ? "Opening checkout…" : "Fund wallet via Bachs"}
-      </Button>
     </form>
   );
 }
