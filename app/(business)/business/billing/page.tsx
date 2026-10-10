@@ -36,7 +36,7 @@ export default async function BillingPage() {
         <WalletCard
           label="Remaining budget"
           balance={analytics.data ? formatKobo(analytics.data.remaining_budget_kobo) : "—"}
-          hint="The most your campaigns can still spend. Topped up below via Bachs."
+          hint="Available to spend now."
           action={
             <Link href="#add-funds">
               <Button variant="gold">Fund wallet</Button>
@@ -46,7 +46,7 @@ export default async function BillingPage() {
         <WalletCard
           label="Total spend"
           balance={analytics.data ? formatKobo(analytics.data.spend_kobo) : "—"}
-          hint="Lifetime across all campaigns. Every kobo is on the ledger below."
+          hint="Lifetime, across all campaigns."
         />
       </div>
 
