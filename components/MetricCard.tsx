@@ -20,7 +20,7 @@ interface MetricCardProps {
   tone?: "default" | "money";
   /** Small "↑ 9.6% vs Sep" comparison beneath the label. */
   delta?: MetricDelta | null;
-  /** Extra context under the delta — e.g. the wallet card's spent + fund footer. */
+  /** Extra context under the delta — e.g. the wallet card's spent + budget bar. */
   footer?: ReactNode;
 }
 

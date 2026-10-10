@@ -33,12 +33,13 @@ interface ValuePickerProps<T extends string> {
  * fades and scales in — while the interaction stays keyboard-native: arrow keys,
  * typeahead and Escape come from Radix, not from us.
  *
- * The trigger is deliberately quiet — no box, small muted label, just a
- * chevron: inside a card header the heading stays the visual parent and the
- * filters read as controls, not content. Height stays 44px for the touch
- * minimum, and the menu keeps the 14px card radius with a 1px Mist border
- * and no shadow, Naija Green tick for the current value. Colour is never the
- * only signal — the tick and the label both mark the selection.
+ * The trigger is a small bordered box — 1px Mist on white, semibold ink label
+ * with a chevron: the label matches the card heading's weight exactly, so
+ * the two sit on one level, and the chevron plus hover state mark it as a
+ * control rather than content. Height stays 44px for the touch minimum, and
+ * the menu keeps the 14px card radius with a 1px Mist border and no shadow,
+ * Naija Green tick for the current value. Colour is never the only signal —
+ * the tick and the label both mark the selection.
  */
 export function ValuePicker<T extends string>({
   label,
@@ -58,7 +59,7 @@ export function ValuePicker<T extends string>({
         aria-label={label}
         aria-busy={busy}
         className={cn(
-          "flex h-11 min-w-0 flex-1 items-center justify-between gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-muted transition-colors hover:bg-cloud/70 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none",
+          "flex h-11 min-w-0 flex-1 items-center justify-between gap-1.5 rounded-lg border border-mist bg-white px-2.5 font-display text-sm font-semibold text-ink transition-colors hover:border-naija/40 hover:text-pine focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-naija disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none",
           busy && "opacity-60",
           className,
         )}
