@@ -6,8 +6,8 @@ import { SpendFooter } from "@/components/SpendFooter";
 import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
-import { seriesDeltas } from "@/lib/insights";
-import { parseChartMetric, parseChartRange } from "@/lib/ranges";
+import { windowDeltas } from "@/lib/insights";
+import { parseChartMetric, parseChartRange, RANGE_COMPARISON } from "@/lib/ranges";
 import type { AnalyticsSummary } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -29,8 +29,10 @@ export default async function BusinessAnalyticsPage({
       impressions: point.impressions,
       clicks: point.clicks,
     }));
-  const deltas = seriesDeltas(rawSeries, deliveryLabel);
-  const vsCaption = deltas.prevLabel ? `vs ${deltas.prevLabel}` : undefined;
+  // Window-vs-window baseline: the selected window against the equal-length
+  // one before it, named in the caption (spec §22 delta tiles).
+  const deltas = windowDeltas(rawSeries, summary?.previous_window ?? null);
+  const vsCaption = summary?.previous_window ? RANGE_COMPARISON[range] : undefined;
 
   const formats = summary?.by_format ?? {};
 

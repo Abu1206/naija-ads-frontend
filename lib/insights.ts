@@ -6,47 +6,50 @@
 import { budgetUtilization, formatDelta, type Delta } from "./format";
 import type { Campaign } from "./types";
 
-export type SeriesGrain = "daily" | "monthly";
-
 export interface SeriesPoint {
   period: string;
   impressions: number;
   clicks: number;
 }
 
-/** Daily periods arrive as "2026-10-03"; monthly as "2026-10". */
-export function detectGrain(periods: string[]): SeriesGrain {
-  return periods.some((p) => /^\d{4}-\d{2}-\d{2}/.test(p)) ? "daily" : "monthly";
+export interface WindowTotals {
+  impressions: number;
+  clicks: number;
 }
 
-export interface PeriodDeltas {
+/** Sum of the windowed series — counts only; the backend owns every number. */
+export function windowTotals(series: SeriesPoint[]): WindowTotals {
+  return {
+    impressions: series.reduce((sum, p) => sum + p.impressions, 0),
+    clicks: series.reduce((sum, p) => sum + p.clicks, 0),
+  };
+}
+
+export interface WindowDeltas {
   impressions: Delta | null;
   clicks: Delta | null;
   ctr: Delta | null;
-  /** Label of the previous period ("Sep"), for "vs Sep" captions. */
-  prevLabel: string | null;
 }
 
 /**
- * Month-over-month (or day-over-day) comparison from the backend series'
- * last two points. Counts and CTR only — spend has no previous-period
- * series, so the spend card shows budget context instead of a delta.
+ * Window-vs-window comparison: the selected window against the equal-length
+ * window before it (`previous_window` from the API). Counts and CTR only —
+ * spend has no previous-window series, so the budget card shows utilization
+ * context instead. Null when there is no baseline, so callers can drop the
+ * delta rather than render a misleading 0%.
  */
-export function seriesDeltas(
+export function windowDeltas(
   series: SeriesPoint[],
-  label: (period: string) => string,
-): PeriodDeltas {
-  const empty: PeriodDeltas = { impressions: null, clicks: null, ctr: null, prevLabel: null };
-  if (series.length < 2) return empty;
-  const prev = series[series.length - 2]!;
-  const last = series[series.length - 1]!;
-  const prevCtr = prev.impressions > 0 ? prev.clicks / prev.impressions : 0;
-  const lastCtr = last.impressions > 0 ? last.clicks / last.impressions : 0;
+  previous: { impressions: number; clicks: number } | null,
+): WindowDeltas {
+  const empty: WindowDeltas = { impressions: null, clicks: null, ctr: null };
+  if (!previous || series.length === 0) return empty;
+  const current = windowTotals(series);
+  if (previous.impressions <= 0 || current.impressions <= 0) return empty;
   return {
-    impressions: formatDelta(last.impressions, prev.impressions),
-    clicks: formatDelta(last.clicks, prev.clicks),
-    ctr: prev.impressions > 0 && last.impressions > 0 ? formatDelta(lastCtr, prevCtr) : null,
-    prevLabel: label(prev.period),
+    impressions: formatDelta(current.impressions, previous.impressions),
+    clicks: formatDelta(current.clicks, previous.clicks),
+    ctr: formatDelta(current.clicks / current.impressions, previous.clicks / previous.impressions),
   };
 }
 

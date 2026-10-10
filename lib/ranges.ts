@@ -13,10 +13,23 @@ export type ChartRange = (typeof CHART_RANGES)[number];
 export const DEFAULT_RANGE: ChartRange = "30d";
 
 export const RANGE_LABELS: Record<ChartRange, string> = {
-  "7d": "7D",
-  "30d": "30D",
-  "90d": "90D",
-  "6m": "6M",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+  "6m": "Last 6 months",
+};
+
+/**
+ * Caption for window-vs-window deltas: the equal-length span immediately
+ * before the selected one. "vs previous 30 days" must describe the real
+ * comparison — an advertiser should never have to guess what a delta is
+ * measured against.
+ */
+export const RANGE_COMPARISON: Record<ChartRange, string> = {
+  "7d": "vs previous 7 days",
+  "30d": "vs previous 30 days",
+  "90d": "vs previous 90 days",
+  "6m": "vs previous 6 months",
 };
 
 export type SeriesGrain = "daily" | "weekly" | "monthly";

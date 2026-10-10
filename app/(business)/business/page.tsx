@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
-import { attentionFlags, seriesDeltas } from "@/lib/insights";
-import { parseChartMetric, parseChartRange } from "@/lib/ranges";
+import { attentionFlags, windowDeltas } from "@/lib/insights";
+import { parseChartMetric, parseChartRange, RANGE_COMPARISON } from "@/lib/ranges";
 import { AD_TYPES, type AnalyticsSummary, type Campaign } from "@/lib/types";
 
 /**
@@ -41,10 +41,11 @@ export default async function BusinessOverviewPage({
       impressions: point.impressions,
       clicks: point.clicks,
     }));
-  // Deltas compare the window's last two points — day-over-day on a daily
-  // window ("vs 7 Oct"), month-over-month on 6M — while the cards stay all-time.
-  const deltas = seriesDeltas(rawSeries, deliveryLabel);
-  const vsCaption = deltas.prevLabel ? `vs ${deltas.prevLabel}` : undefined;
+  // Deltas compare the selected window against the equal-length one before
+  // it; the caption names that baseline so nobody has to guess ("vs previous
+  // 30 days"). Card values stay all-time summary numbers.
+  const deltas = windowDeltas(rawSeries, summary?.previous_window ?? null);
+  const vsCaption = summary?.previous_window ? RANGE_COMPARISON[range] : undefined;
 
   // Best-funded first: the campaigns eating the budget deserve the top rows.
   const topCampaigns = [...rows].sort((a, b) => b.spend_kobo - a.spend_kobo).slice(0, 5);

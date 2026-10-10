@@ -5,6 +5,7 @@ import {
   grainForRange,
   parseChartMetric,
   parseChartRange,
+  RANGE_COMPARISON,
 } from "./ranges";
 
 describe("parseChartRange", () => {
@@ -35,5 +36,15 @@ describe("parseChartMetric", () => {
     expect(parseChartMetric("ctr")).toBe("ctr");
     expect(parseChartMetric(undefined)).toBe("combo");
     expect(parseChartMetric("everything")).toBe("combo");
+  });
+});
+
+describe("RANGE_COMPARISON", () => {
+  it("names the equal-length window before each range", () => {
+    // The caption must describe the real baseline — never "vs 7 Oct".
+    expect(RANGE_COMPARISON["7d"]).toBe("vs previous 7 days");
+    expect(RANGE_COMPARISON["30d"]).toBe("vs previous 30 days");
+    expect(RANGE_COMPARISON["90d"]).toBe("vs previous 90 days");
+    expect(RANGE_COMPARISON["6m"]).toBe("vs previous 6 months");
   });
 });

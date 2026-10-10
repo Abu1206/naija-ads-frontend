@@ -26,20 +26,22 @@ import type {
   Placement,
 } from "@/lib/types";
 import { isRole, roleFromLoginEmail } from "./session";
-import { parseChartRange } from "@/lib/ranges";
-import { toWeekly } from "./series";
+import { parseChartRange, type ChartRange } from "@/lib/ranges";
+import { toWeekly, type MockSeriesPoint } from "./series";
 import {
   apps as seedApps,
   auditLogs as seedAuditLogs,
   businesses as seedBusinesses,
   businessAnalytics,
   businessDaily,
+  businessSeries,
   campaigns as seedCampaigns,
   creatives as seedCreatives,
   CURRENT_BUSINESS_ID,
   CURRENT_DEVELOPER_ID,
   developerAnalytics,
   developerDaily,
+  developerSeries,
   developers as seedDevelopers,
   earnings as seedEarnings,
   fraudAlerts as seedFraudAlerts,
@@ -131,23 +133,74 @@ function scopeParam(path: string): string | null {
  * Unknown or missing ranges fall back to the monthly series (the pre-range
  * behaviour), so old callers keep working.
  */
-function rangedAnalytics(scope: "business" | "developer", path: string) {
-  const query = path.split("?")[1] ?? "";
-  // Absent range = legacy caller (e.g. the admin overview): keep the monthly
-  // series. Present-but-unknown parses to the page default, like the pages do.
-  const raw = new URLSearchParams(query).get("range");
-  const range = raw === null ? "6m" : parseChartRange(raw);
-  const base = scope === "developer" ? developerAnalytics : businessAnalytics;
+function windowSums(points: MockSeriesPoint[]) {
+  if (points.length === 0) return null;
+  return {
+    impressions: points.reduce((sum, p) => sum + p.impressions, 0),
+    clicks: points.reduce((sum, p) => sum + p.clicks, 0),
+  };
+}
+
+/** Growth the fixtures already show month to month (business ~+29%, developer ~+24%). */
+const MONTHLY_GROWTH = { business: 1.29, developer: 1.24 } as const;
+const MONTHLY_CTR = { business: 0.0325, developer: 0.0147 } as const;
+
+/**
+ * The six months before the fixture's first month, back-projected from its own
+ * growth rate — consistent with the trend the monthly series already shows, so
+ * a "vs previous 6 months" delta reads as the same account growing.
+ */
+function priorSixMonths(scope: "business" | "developer") {
+  const first = (scope === "developer" ? developerSeries : businessSeries)[0]!;
+  // Six prior months, oldest→newest, back-projected at the fixture's growth.
+  const months: number[] = [];
+  let running = first.impressions;
+  for (let i = 1; i <= 6; i++) {
+    running = Math.round(running / MONTHLY_GROWTH[scope]);
+    months.push(running);
+  }
+  const total = months.reduce((a, b) => a + b, 0);
+  return { impressions: total, clicks: Math.round(total * MONTHLY_CTR[scope]) };
+}
+
+/**
+ * The equal-length window immediately before the requested one — the baseline
+ * for window deltas ("vs previous 30 days"). 7D/30D/90D slice the daily
+ * history; 6M back-projects the fixtures. Null when history is too short.
+ */
+function priorWindow(scope: "business" | "developer", range: ChartRange) {
   const daily = scope === "developer" ? developerDaily : businessDaily;
   switch (range) {
     case "7d":
-      return { ...base, series: daily.slice(-7) };
+      return windowSums(daily.slice(-14, -7));
     case "30d":
-      return { ...base, series: daily.slice(-30) };
+      return windowSums(daily.slice(-60, -30));
     case "90d":
-      return { ...base, series: toWeekly(daily) };
+      return windowSums(toWeekly(daily.slice(0, 91)));
     case "6m":
-      return base;
+      return priorSixMonths(scope);
+  }
+}
+
+function rangedAnalytics(scope: "business" | "developer", path: string) {
+  const query = path.split("?")[1] ?? "";
+  const base = scope === "developer" ? developerAnalytics : businessAnalytics;
+  const daily = scope === "developer" ? developerDaily : businessDaily;
+  const raw = new URLSearchParams(query).get("range");
+  // Absent range = legacy caller (e.g. the admin overview): the monthly
+  // series as-is, and no window baseline — it asked for no window.
+  if (raw === null) return base;
+  const range = parseChartRange(raw);
+  const previous_window = priorWindow(scope, range);
+  switch (range) {
+    case "7d":
+      return { ...base, series: daily.slice(-7), previous_window };
+    case "30d":
+      return { ...base, series: daily.slice(-30), previous_window };
+    case "90d":
+      return { ...base, series: toWeekly(daily), previous_window };
+    case "6m":
+      return { ...base, previous_window };
   }
 }
 

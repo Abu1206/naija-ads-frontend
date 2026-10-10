@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attentionFlags, detectGrain, seriesDeltas } from "./insights";
+import { attentionFlags, windowDeltas, windowTotals } from "./insights";
 import type { Campaign } from "./types";
 
 const campaign = (overrides: Partial<Campaign>): Campaign => ({
@@ -20,35 +20,53 @@ const campaign = (overrides: Partial<Campaign>): Campaign => ({
   ...overrides,
 });
 
-describe("detectGrain", () => {
-  it("detects daily periods", () => {
-    expect(detectGrain(["2026-10-01", "2026-10-02"])).toBe("daily");
+describe("windowTotals", () => {
+  it("sums impressions and clicks across the window", () => {
+    const totals = windowTotals([
+      { period: "2026-10-01", impressions: 1200, clicks: 40 },
+      { period: "2026-10-02", impressions: 800, clicks: 20 },
+    ]);
+    expect(totals).toEqual({ impressions: 2000, clicks: 60 });
   });
 
-  it("defaults to monthly", () => {
-    expect(detectGrain(["2026-09", "2026-10"])).toBe("monthly");
-    expect(detectGrain([])).toBe("monthly");
+  it("returns zeroes for an empty window", () => {
+    expect(windowTotals([])).toEqual({ impressions: 0, clicks: 0 });
   });
 });
 
-describe("seriesDeltas", () => {
+describe("windowDeltas", () => {
+  // 30D window: 1,842,000 impressions, 46,100 clicks (CTR 2.50%).
   const series = [
-    { period: "2026-09", impressions: 1680000, clicks: 43200 },
-    { period: "2026-10", impressions: 1842000, clicks: 46100 },
+    { period: "2026-10-01", impressions: 900000, clicks: 22500 },
+    { period: "2026-10-02", impressions: 942000, clicks: 23600 },
   ];
 
-  it("compares the last two points with the previous label", () => {
-    const deltas = seriesDeltas(series, (p) => p.slice(5));
-    expect(deltas.prevLabel).toBe("09");
+  it("compares the window against the previous window", () => {
+    const deltas = windowDeltas(series, { impressions: 1680000, clicks: 43200 });
     expect(deltas.impressions).toEqual({ text: "↑ 9.6%", direction: "up" });
     expect(deltas.clicks?.direction).toBe("up");
     // CTR slipped from 2.57% to 2.50%: impressions grew faster than clicks.
     expect(deltas.ctr?.direction).toBe("down");
   });
 
-  it("returns nulls for a single point", () => {
-    const deltas = seriesDeltas(series.slice(0, 1), (p) => p);
-    expect(deltas).toEqual({ impressions: null, clicks: null, ctr: null, prevLabel: null });
+  it("returns nulls with no baseline, so callers drop the delta", () => {
+    expect(windowDeltas(series, null)).toEqual({ impressions: null, clicks: null, ctr: null });
+  });
+
+  it("returns nulls for an empty window", () => {
+    expect(windowDeltas([], { impressions: 1680000, clicks: 43200 })).toEqual({
+      impressions: null,
+      clicks: null,
+      ctr: null,
+    });
+  });
+
+  it("returns nulls when the baseline shows no impressions", () => {
+    expect(windowDeltas(series, { impressions: 0, clicks: 0 })).toEqual({
+      impressions: null,
+      clicks: null,
+      ctr: null,
+    });
   });
 });
 

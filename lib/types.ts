@@ -176,6 +176,12 @@ export interface AnalyticsSummary {
   filled: number;
   by_format: Partial<Record<AdType, { impressions: number; clicks: number; revenue_kobo: number }>>;
   series: { period: string; impressions: number; clicks: number }[];
+  /**
+   * Totals for the equal-length window immediately before this one — the
+   * baseline for window deltas ("vs previous 30 days"). Null when the
+   * history is too short for a comparison.
+   */
+  previous_window: { impressions: number; clicks: number } | null;
 }
 
 export interface FieldErrors {

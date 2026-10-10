@@ -1250,6 +1250,8 @@ export const businessAnalytics: AnalyticsSummary = {
     audio: { impressions: 617000, clicks: 5000, revenue_kobo: 0 },
   },
   series: businessSeries,
+  // All-time fetch: the window deltas need a range, which this path doesn't ask for.
+  previous_window: null,
 };
 
 /**
@@ -1271,4 +1273,5 @@ export const developerAnalytics: AnalyticsSummary = {
     audio: { impressions: 224000, clicks: 2500, revenue_kobo: 6700000 },
   },
   series: developerSeries,
+  previous_window: null,
 };

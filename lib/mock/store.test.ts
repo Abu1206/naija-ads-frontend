@@ -58,6 +58,31 @@ describe("mockRead", () => {
     expect(legacy?.impressions).toBe(5172900);
   });
 
+  it("serves the equal-length previous window for honest deltas", () => {
+    type Window = {
+      series: { impressions: number }[];
+      previous_window: { impressions: number; clicks: number } | null;
+    };
+    const read = (path: string) => mockRead<Window>(path);
+
+    const d7 = read("/api/v1/analytics?scope=business&range=7d")!;
+    const cur7 = d7.series.reduce((s, p) => s + p.impressions, 0);
+    // A growing fixture: every window beats its predecessor.
+    expect(d7.previous_window!.impressions).toBeGreaterThan(0);
+    expect(d7.previous_window!.impressions).toBeLessThan(cur7);
+
+    const m6 = read("/api/v1/analytics?scope=business&range=6m")!;
+    expect(m6.previous_window!.impressions).toBeLessThan(5172900);
+    // The prior window keeps the fixture's own CTR ballpark, not a round lie.
+    const prevCtr = m6.previous_window!.clicks / m6.previous_window!.impressions;
+    expect(prevCtr).toBeGreaterThan(0.02);
+    expect(prevCtr).toBeLessThan(0.05);
+
+    // No range = no comparison baseline (the admin overview reads this).
+    const legacy = read("/api/v1/analytics?scope=business")!;
+    expect(legacy.previous_window).toBeNull();
+  });
+
   it("scopes owned collections to the signed-in account", () => {
     const campaigns = mockRead<{ business_id: string }[]>("/api/v1/campaigns");
     expect(campaigns?.length).toBeGreaterThan(0);
