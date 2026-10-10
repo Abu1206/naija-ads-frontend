@@ -5,12 +5,13 @@ import type { DeliveryPoint } from "@/components/DeliveryChart";
 import { MetricCard } from "@/components/MetricCard";
 import { SpendFooter } from "@/components/SpendFooter";
 import { StatusBadge } from "@/components/StatusBadge";
+import { WalletBanner } from "@/components/WalletBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { load } from "@/lib/api";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
-import { attentionFlags, windowDeltas } from "@/lib/insights";
-import { parseChartMetric, parseChartRange, RANGE_COMPARISON } from "@/lib/ranges";
+import { attentionFlags, campaignSignal, windowDeltas } from "@/lib/insights";
+import { parseChartMetric, parseChartRange, RANGE_COMPARISON, RANGE_LABELS } from "@/lib/ranges";
 import { AD_TYPES, type AnalyticsSummary, type Campaign } from "@/lib/types";
 
 /**
@@ -41,9 +42,10 @@ export default async function BusinessOverviewPage({
       impressions: point.impressions,
       clicks: point.clicks,
     }));
-  // Deltas compare the selected window against the equal-length one before
-  // it; the caption names that baseline so nobody has to guess ("vs previous
-  // 30 days"). Card values stay all-time summary numbers.
+  // The summary follows the selected window: KPI values are the window sums,
+  // deltas compare against the equal-length window before it, and the hint +
+  // caption name both scopes so nobody has to guess ("Last 30 days" over
+  // "vs previous 30 days"). The wallet stays point-in-time.
   const deltas = windowDeltas(rawSeries, summary?.previous_window ?? null);
   const vsCaption = summary?.previous_window ? RANGE_COMPARISON[range] : undefined;
 
@@ -65,11 +67,18 @@ export default async function BusinessOverviewPage({
         cta={{ href: "/business/campaigns/new", label: "New campaign" }}
       />
 
+      {/* Low-wallet banner first: the funding path appears here, and only
+          here, when the wallet crosses the low-balance line. */}
+      {summary ? (
+        <WalletBanner spendKobo={summary.spend_kobo} remainingKobo={summary.remaining_budget_kobo} />
+      ) : null}
+
       <div className="grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Impressions"
           value={summary ? formatCount(summary.impressions) : "—"}
           icon="analytics"
+          hint={RANGE_LABELS[range]}
           error={analytics.error}
           delta={deltas.impressions ? { ...deltas.impressions, caption: vsCaption } : null}
         />
@@ -77,6 +86,7 @@ export default async function BusinessOverviewPage({
           label="Clicks"
           value={summary ? formatCount(summary.clicks) : "—"}
           icon="campaigns"
+          hint={RANGE_LABELS[range]}
           error={analytics.error}
           delta={deltas.clicks ? { ...deltas.clicks, caption: vsCaption } : null}
         />
@@ -84,6 +94,7 @@ export default async function BusinessOverviewPage({
           label="CTR"
           value={summary ? formatCTR(summary.clicks, summary.impressions) : "—"}
           icon="overview"
+          hint={RANGE_LABELS[range]}
           error={analytics.error}
           delta={deltas.ctr ? { ...deltas.ctr, caption: vsCaption } : null}
         />
@@ -92,6 +103,7 @@ export default async function BusinessOverviewPage({
           value={summary ? formatKobo(summary.remaining_budget_kobo) : "—"}
           icon="billing"
           tone="money"
+          hint="Available now"
           error={analytics.error}
           footer={
             summary ? (
@@ -141,6 +153,20 @@ export default async function BusinessOverviewPage({
           { key: "clicks", header: "Clicks", numeric: true, render: (c) => formatCount(c.clicks) },
           { key: "ctr", header: "CTR", numeric: true, render: (c) => formatCTR(c.clicks, c.impressions) },
           { key: "spend", header: "Spend", numeric: true, render: (c) => formatKobo(c.spend_kobo) },
+          {
+            key: "signal",
+            header: "Signal",
+            render: (c) => {
+              const signal = campaignSignal(c);
+              return signal ? (
+                <span className="inline-block rounded-full bg-cloud px-2.5 py-1 text-xs font-semibold text-pine">
+                  {signal.label}
+                </span>
+              ) : (
+                <span className="text-muted">—</span>
+              );
+            },
+          },
         ]}
         rows={topCampaigns}
         loading={false}

@@ -36,4 +36,9 @@ describe("MetricCard", () => {
     const { container } = render(<MetricCard label="Clicks" value="46,100" />);
     expect(container.querySelector(".mt-auto")).toBeNull();
   });
+
+  it("names the value scope in the hint slot", () => {
+    render(<MetricCard label="Impressions" value="1,842,000" hint="All-time" />);
+    expect(screen.getByText("All-time")).toBeInTheDocument();
+  });
 });
