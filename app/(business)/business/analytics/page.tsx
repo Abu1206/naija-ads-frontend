@@ -7,7 +7,7 @@ import { load } from "@/lib/api";
 import { analyticsFor } from "@/lib/endpoints";
 import { deliveryLabel, formatCTR, formatCount, formatKobo } from "@/lib/format";
 import { windowDeltas } from "@/lib/insights";
-import { parseChartMetric, parseChartRange, RANGE_COMPARISON } from "@/lib/ranges";
+import { parseChartMetric, parseChartRange, RANGE_COMPARISON, RANGE_LABELS } from "@/lib/ranges";
 import type { AnalyticsSummary } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -45,6 +45,7 @@ export default async function BusinessAnalyticsPage({
           label="Impressions"
           value={summary ? formatCount(summary.impressions) : "—"}
           icon="analytics"
+          hint={RANGE_LABELS[range]}
           error={error}
           delta={deltas.impressions ? { ...deltas.impressions, caption: vsCaption } : null}
         />
@@ -52,6 +53,7 @@ export default async function BusinessAnalyticsPage({
           label="Clicks"
           value={summary ? formatCount(summary.clicks) : "—"}
           icon="campaigns"
+          hint={RANGE_LABELS[range]}
           error={error}
           delta={deltas.clicks ? { ...deltas.clicks, caption: vsCaption } : null}
         />
@@ -59,6 +61,7 @@ export default async function BusinessAnalyticsPage({
           label="CTR"
           value={summary ? formatCTR(summary.clicks, summary.impressions) : "—"}
           icon="overview"
+          hint={RANGE_LABELS[range]}
           error={error}
           delta={deltas.ctr ? { ...deltas.ctr, caption: vsCaption } : null}
         />
@@ -67,6 +70,7 @@ export default async function BusinessAnalyticsPage({
           value={summary ? formatKobo(summary.remaining_budget_kobo) : "—"}
           icon="billing"
           tone="money"
+          hint="Available now"
           error={error}
           footer={
             summary ? (
