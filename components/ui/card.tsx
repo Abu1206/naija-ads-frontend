@@ -2,15 +2,16 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * shadcn-style Card primitives on Naija Ads tokens: white cards on the Cloud
- * page ground with no enclosing border (standalone surfaces — the panel tint
- * carries the edge), 14px card radius, Quicksand headings (design-system.md).
+ * shadcn-style Card primitives on Naija Ads tokens: white cards with a 1px
+ * Mist border — every dashboard panel, table and chart card carries the same
+ * frame ("flat and bordered", design-system.md / globals.css). 14px card
+ * radius, Quicksand headings.
  */
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
-      className={cn("rounded-card bg-white text-ink", className)}
+      className={cn("rounded-card border border-mist bg-white text-ink", className)}
       {...props}
     />
   );
