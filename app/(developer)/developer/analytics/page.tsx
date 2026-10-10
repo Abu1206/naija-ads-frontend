@@ -7,7 +7,7 @@ import { load } from "@/lib/api";
 import { requireRole } from "@/lib/auth";
 import { analyticsFor, endpoints } from "@/lib/endpoints";
 import { deliveryLabel, formatCount, formatECPM, formatFillRate, formatKobo } from "@/lib/format";
-import { parseChartMetric, parseChartRange } from "@/lib/ranges";
+import { parseChartMetric, parseChartRange, RANGE_LABELS } from "@/lib/ranges";
 import type { AnalyticsSummary, App, DeveloperEarning } from "@/lib/types";
 import { AD_TYPES } from "@/lib/types";
 
@@ -24,13 +24,19 @@ export default async function DeveloperAnalyticsPage({
   const params = await searchParams;
   const range = parseChartRange(params.range);
   const metric = parseChartMetric(params.metric);
-  const [analytics, apps, earnings] = await Promise.all([
+  const [analytics, apps, earnings, allTime] = await Promise.all([
     load<AnalyticsSummary>(analyticsFor("developer", range)),
     load<App[]>(endpoints.apps),
     load<DeveloperEarning[]>(endpoints.earnings),
+    // Lifetime money + request totals for the ratio tiles: the fixtures carry
+    // no daily revenue/request attribution (and money is never derived
+    // client-side), so fill rate and eCPM stay all-time until the backend
+    // serves windowed revenue — then this collapses back to one load.
+    load<AnalyticsSummary>(analyticsFor("developer")),
   ]);
 
   const summary = analytics.data;
+  const totals = allTime.data;
   const formats = summary?.by_format ?? {};
   const appNames = new Map((apps.data ?? []).map((a) => [a.app_id, a.name]));
   const series: DeliveryPoint[] =
@@ -52,24 +58,28 @@ export default async function DeveloperAnalyticsPage({
           label="Impressions"
           value={summary ? formatCount(summary.impressions) : "—"}
           icon="analytics"
+          hint={RANGE_LABELS[range]}
           error={analytics.error}
         />
         <MetricCard
           label="Ad requests"
-          value={summary ? formatCount(summary.ad_requests) : "—"}
+          value={totals ? formatCount(totals.ad_requests) : "—"}
           icon="placements"
+          hint="All-time"
           error={analytics.error}
         />
         <MetricCard
           label="Fill rate"
-          value={summary ? formatFillRate(summary.filled, summary.ad_requests) : "—"}
+          value={totals ? formatFillRate(totals.filled, totals.ad_requests) : "—"}
           icon="overview"
+          hint="All-time"
           error={analytics.error}
         />
         <MetricCard
           label="eCPM"
-          value={summary ? formatECPM(summary.revenue_kobo, summary.impressions) : "—"}
+          value={totals ? formatECPM(totals.revenue_kobo, totals.impressions) : "—"}
           icon="earnings"
+          hint="All-time"
           error={analytics.error}
         />
       </div>
